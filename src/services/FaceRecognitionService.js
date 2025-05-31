@@ -14,18 +14,23 @@ class FaceRecognitionService {
 
   async loadDependencies() {
     try {
-      // Try to load TensorFlow.js
+      // In web environment, skip dynamic imports that cause bundler issues
+      if (this.isWebEnvironment) {
+        console.log('Web environment detected - running in demo mode');
+        console.log('TensorFlow.js and face-api.js would be loaded here in production');
+        return;
+      }
+
+      // Try to load TensorFlow.js (mobile only)
       try {
         this.tf = await import('@tensorflow/tfjs');
-        if (!this.isWebEnvironment) {
-          await import('@tensorflow/tfjs-react-native');
-        }
+        await import('@tensorflow/tfjs-react-native');
         console.log('TensorFlow.js loaded successfully');
       } catch (error) {
         console.warn('TensorFlow.js not available:', error.message);
       }
 
-      // Try to load face-api.js
+      // Try to load face-api.js (mobile only)
       try {
         this.faceapi = await import('face-api.js');
         console.log('face-api.js loaded successfully');
@@ -33,7 +38,7 @@ class FaceRecognitionService {
         console.warn('face-api.js not available:', error.message);
       }
 
-      // Try to load react-native-fs
+      // Try to load react-native-fs (mobile only)
       try {
         const rnfsModule = await import('react-native-fs');
         this.RNFS = rnfsModule.default;

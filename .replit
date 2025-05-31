@@ -22,7 +22,7 @@ args = "npm install"
 
 [[workflows.workflow.tasks]]
 task = "shell.exec"
-args = "npm start"
+args = "npm run web"
 
 [[ports]]
 localPort = 8081
