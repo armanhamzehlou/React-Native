@@ -40,7 +40,21 @@ export default function App() {
         if (Platform.OS === 'android') {
           await requestPermissions();
         }
-        await initializeApp();
+        
+        // Add timeout to prevent infinite initialization
+        const initTimeout = setTimeout(() => {
+          console.error('Initialization timeout - forcing completion');
+          setIsInitialized(true);
+        }, 10000); // 10 second timeout
+        
+        try {
+          await initializeApp();
+          clearTimeout(initTimeout);
+        } catch (error) {
+          clearTimeout(initTimeout);
+          console.error('Setup error:', error);
+        }
+        
         setupDeepLinkHandler();
       } else {
         Alert.alert('Platform Not Supported', 'This app works on Android devices and web demo.');
@@ -95,13 +109,19 @@ export default function App() {
 
   const initializeApp = async () => {
     try {
+      console.log('Starting app initialization...');
       await FaceRecognitionService.initialize();
+      console.log('Face Recognition Service initialized, loading database...');
       const count = await FaceRecognitionService.loadFaceDatabase();
+      console.log('Database loaded with', count, 'faces');
       setFaceDbCount(count);
-      setIsInitialized(true);
+      console.log('Loading face database images...');
       await loadFaceDbImages();
+      console.log('App initialization complete, setting isInitialized to true');
+      setIsInitialized(true);
     } catch (error) {
       console.error('Failed to initialize app:', error);
+      setIsInitialized(false); // Ensure we set this to false on error
       Alert.alert('Initialization Error', error.message);
     }
   };

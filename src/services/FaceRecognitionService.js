@@ -53,6 +53,7 @@ class FaceRecognitionService {
         // Always set initialized to true after successful directory setup
         this.isInitialized = true;
         console.log('Face Recognition Service initialized successfully');
+        return; // Ensure we exit here
       } else {
         throw new Error(`Platform ${Platform.OS} not supported`);
       }
@@ -62,6 +63,7 @@ class FaceRecognitionService {
       this.isInitialized = false;
       throw error;
     }
+  }
   }
 
   async getFaceDbImages() {
