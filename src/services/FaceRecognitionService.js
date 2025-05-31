@@ -1,5 +1,5 @@
 
-// Import conditionally for web/mobile compatibility
+// Face Recognition Service - uses dynamic imports for compatibility
 class FaceRecognitionService {
   constructor() {
     this.isInitialized = false;
