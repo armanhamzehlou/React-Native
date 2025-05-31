@@ -71,7 +71,7 @@ export default function App() {
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription?.remove();
-  }, []);
+  }, [initializeApp, setupDeepLinkHandler, handleDeepLink]);
 
   const requestPermissions = async () => {
     try {

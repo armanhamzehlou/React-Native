@@ -64,53 +64,12 @@ class FaceRecognitionService {
       throw error;
     }
   }
-  }
 
   async getFaceDbImages() {
     try {
       if (Platform.OS === 'web') {
-        // Return demo images with proper preview images for web
-        return [
-          { 
-            filename: 'demo_face_1.jpg', 
-            uri: 'data:image/svg+xml;base64,' + btoa(`
-              <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-                <rect width="120" height="120" fill="#4CAF50"/>
-                <circle cx="60" cy="45" r="15" fill="white"/>
-                <circle cx="45" cy="40" r="3" fill="#333"/>
-                <circle cx="75" cy="40" r="3" fill="#333"/>
-                <path d="M45 55 Q60 65 75 55" stroke="white" stroke-width="2" fill="none"/>
-                <text x="60" y="100" text-anchor="middle" fill="white" font-size="12">Person 1</text>
-              </svg>
-            `)
-          },
-          { 
-            filename: 'demo_face_2.jpg', 
-            uri: 'data:image/svg+xml;base64,' + btoa(`
-              <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-                <rect width="120" height="120" fill="#2196F3"/>
-                <circle cx="60" cy="45" r="15" fill="white"/>
-                <circle cx="45" cy="40" r="3" fill="#333"/>
-                <circle cx="75" cy="40" r="3" fill="#333"/>
-                <path d="M45 55 Q60 65 75 55" stroke="white" stroke-width="2" fill="none"/>
-                <text x="60" y="100" text-anchor="middle" fill="white" font-size="12">Person 2</text>
-              </svg>
-            `)
-          },
-          { 
-            filename: 'demo_face_3.jpg', 
-            uri: 'data:image/svg+xml;base64,' + btoa(`
-              <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
-                <rect width="120" height="120" fill="#FF9800"/>
-                <circle cx="60" cy="45" r="15" fill="white"/>
-                <circle cx="45" cy="40" r="3" fill="#333"/>
-                <circle cx="75" cy="40" r="3" fill="#333"/>
-                <path d="M45 55 Q60 65 75 55" stroke="white" stroke-width="2" fill="none"/>
-                <text x="60" y="100" text-anchor="middle" fill="white" font-size="12">Person 3</text>
-              </svg>
-            `)
-          }
-        ];
+        console.log('Web environment - no real face database access available');
+        return [];
       }
 
       console.log('Checking FaceDB directory:', this.faceDbPath);
@@ -331,14 +290,9 @@ class FaceRecognitionService {
   async loadFaceDatabase() {
     try {
       if (Platform.OS === 'web') {
-        console.log('Running in web environment - simulating face database');
-        // Simulate loading faces for web demo
+        console.log('Running in web environment - no face database available');
         this.faceDatabase.clear();
-        this.faceDatabase.set('demo_face_1.jpg', new Float32Array(128).fill(0.1));
-        this.faceDatabase.set('demo_face_2.jpg', new Float32Array(128).fill(0.2));
-        this.faceDatabase.set('demo_face_3.jpg', new Float32Array(128).fill(0.3));
-        console.log('Simulated face database with 3 faces');
-        return 3;
+        return 0;
       }
 
       // Check if FaceDB directory exists
@@ -491,22 +445,8 @@ class FaceRecognitionService {
       console.log(`Matching face from: ${imagePath}`);
 
       if (Platform.OS === 'web') {
-        // Simulate high-accuracy face matching for web demo
-        const matches = Array.from(this.faceDatabase.keys());
-        if (matches.length > 0) {
-          // Simulate 90%+ accuracy by being more selective
-          const shouldMatch = Math.random() > 0.3; // 70% chance of finding a match
-          if (shouldMatch) {
-            const randomMatch = matches[Math.floor(Math.random() * matches.length)];
-            const confidence = (0.90 + Math.random() * 0.09).toFixed(3); // 90-99% confidence
-            return {
-              match: 'yes',
-              filename: randomMatch,
-              confidence: confidence
-            };
-          }
-        }
-        return { match: 'no' };
+        console.log('Web environment - no face matching available');
+        return { match: 'no', error: 'Face matching not available in web environment' };
       }
 
       // Check if image file exists
