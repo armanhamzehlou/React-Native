@@ -1,24 +1,52 @@
 
-import * as tf from '@tensorflow/tfjs';
-import '@tensorflow/tfjs-react-native';
-import * as faceapi from 'face-api.js';
-import RNFS from 'react-native-fs';
+// Import conditionally for web/mobile compatibility
+let tf, faceapi, RNFS;
+
+try {
+  tf = require('@tensorflow/tfjs');
+  if (typeof window !== 'undefined') {
+    // Web environment
+    console.log('Running in web environment');
+  } else {
+    // React Native environment
+    require('@tensorflow/tfjs-react-native');
+  }
+} catch (error) {
+  console.warn('TensorFlow.js not available:', error.message);
+}
+
+try {
+  faceapi = require('face-api.js');
+} catch (error) {
+  console.warn('face-api.js not available:', error.message);
+}
+
+try {
+  RNFS = require('react-native-fs');
+} catch (error) {
+  console.warn('react-native-fs not available:', error.message);
+}
 
 class FaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.faceDatabase = new Map(); // Map of filename -> face descriptor
-    this.faceDbPath = `${RNFS.ExternalStorageDirectoryPath}/FaceDB`;
+    this.faceDbPath = RNFS ? `${RNFS.ExternalStorageDirectoryPath}/FaceDB` : '/FaceDB';
     this.modelsLoaded = false;
+    this.isWebEnvironment = typeof window !== 'undefined';
   }
 
   async initialize() {
     if (this.isInitialized) return;
 
     try {
-      // Initialize TensorFlow
-      await tf.ready();
-      console.log('TensorFlow.js initialized');
+      if (tf) {
+        // Initialize TensorFlow
+        await tf.ready();
+        console.log('TensorFlow.js initialized');
+      } else {
+        console.log('TensorFlow.js not available - running in demo mode');
+      }
 
       // Load face-api.js models (you'll need to include model files)
       await this.loadModels();
@@ -52,6 +80,22 @@ class FaceRecognitionService {
 
   async loadFaceDatabase() {
     try {
+      if (!RNFS) {
+        console.log('Running in web environment - simulating face database');
+        // Simulate some test faces for web demo
+        this.faceDatabase.clear();
+        const testFaces = ['alice.jpg', 'bob.jpg', 'charlie.jpg'];
+        for (const name of testFaces) {
+          const mockDescriptor = new Float32Array(128);
+          for (let i = 0; i < 128; i++) {
+            mockDescriptor[i] = Math.random();
+          }
+          this.faceDatabase.set(name, mockDescriptor);
+        }
+        console.log(`Simulated face database with ${this.faceDatabase.size} faces`);
+        return this.faceDatabase.size;
+      }
+
       // Check if FaceDB directory exists
       const exists = await RNFS.exists(this.faceDbPath);
       if (!exists) {
@@ -123,10 +167,14 @@ class FaceRecognitionService {
 
       console.log(`Matching face from: ${imagePath}`);
 
-      // Check if image file exists
-      const exists = await RNFS.exists(imagePath);
-      if (!exists) {
-        throw new Error(`Image file not found: ${imagePath}`);
+      // Check if image file exists (skip check in web environment)
+      if (RNFS) {
+        const exists = await RNFS.exists(imagePath);
+        if (!exists) {
+          throw new Error(`Image file not found: ${imagePath}`);
+        }
+      } else {
+        console.log(`Web environment - simulating image processing for: ${imagePath}`);
       }
 
       // Extract face descriptor from input image
