@@ -108,7 +108,9 @@ export default function App() {
 
   const loadFaceDbImages = async () => {
     try {
+      console.log('Loading face database images...');
       const images = await FaceRecognitionService.getFaceDbImages();
+      console.log('Loaded images:', images.length, images.map(img => img.filename));
       setFaceDbImages(images);
     } catch (error) {
       console.error('Failed to load face database images:', error);
@@ -169,12 +171,17 @@ export default function App() {
 
   const reloadDatabase = async () => {
     try {
+      console.log('Reloading face database...');
       const count = await FaceRecognitionService.loadFaceDatabase();
+      console.log('Database loaded with', count, 'faces');
       setFaceDbCount(count);
+      
       await loadFaceDbImages();
+      
       Alert.alert('Database Reloaded', `Loaded ${count} face images`);
     } catch (error) {
-      Alert.alert('Error', 'Failed to reload database');
+      console.error('Error reloading database:', error);
+      Alert.alert('Error', `Failed to reload database: ${error.message}`);
     }
   };
 
@@ -200,8 +207,14 @@ export default function App() {
 
   const addFaceToDatabase = async () => {
     try {
+      console.log('Starting image picker...');
       const imageUri = await pickImageFromGallery();
-      if (!imageUri) return;
+      if (!imageUri) {
+        console.log('No image selected');
+        return;
+      }
+
+      console.log('Selected image URI:', imageUri);
 
       Alert.prompt(
         'Add Face to Database',
@@ -214,12 +227,21 @@ export default function App() {
               if (name && name.trim()) {
                 try {
                   const filename = `${name.trim().replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+                  console.log('Adding face to database:', filename, 'from', imageUri);
+                  
                   await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
+                  console.log('Face added successfully');
+                  
                   Alert.alert('Success', `Face added to database as ${filename}`);
+                  
+                  console.log('Reloading database...');
                   await reloadDatabase();
                 } catch (error) {
-                  Alert.alert('Error', 'Failed to add face to database');
+                  console.error('Error adding face to database:', error);
+                  Alert.alert('Error', `Failed to add face to database: ${error.message}`);
                 }
+              } else {
+                console.log('No name provided');
               }
             }
           }
@@ -227,7 +249,8 @@ export default function App() {
         'plain-text'
       );
     } catch (error) {
-      Alert.alert('Error', 'Failed to add face to database');
+      console.error('Error in addFaceToDatabase:', error);
+      Alert.alert('Error', `Failed to add face to database: ${error.message}`);
     }
   };
 
@@ -274,12 +297,19 @@ export default function App() {
 
   const renderFaceDbItem = ({ item }) => (
     <View style={styles.faceItem}>
-      <Image 
-        source={{ uri: item.uri }} 
-        style={styles.faceImage}
-        onError={(error) => console.log('Image load error:', error)}
-        defaultSource={require('./assets/icon.png')}
-      />
+      {item.uri ? (
+        <Image 
+          source={{ uri: item.uri }} 
+          style={styles.faceImage}
+          onError={(error) => console.log('Image load error for', item.filename, ':', error)}
+          onLoad={() => console.log('Successfully loaded image:', item.filename)}
+        />
+      ) : (
+        <View style={[styles.faceImage, styles.placeholderImage]}>
+          <Text style={styles.placeholderText}>📷</Text>
+          <Text style={styles.placeholderText}>No Preview</Text>
+        </View>
+      )}
       <Text style={styles.faceFilename} numberOfLines={2}>{item.filename}</Text>
       <TouchableOpacity 
         style={styles.removeButton}
@@ -647,6 +677,16 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 6,
     backgroundColor: '#f0f0f0',
+  },
+  placeholderImage: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e0e0e0',
+  },
+  placeholderText: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
   },
   faceFilename: {
     fontSize: 12,

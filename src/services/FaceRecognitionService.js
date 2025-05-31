@@ -88,24 +88,50 @@ class FaceRecognitionService {
         ];
       }
 
+      console.log('Checking FaceDB directory:', this.faceDbPath);
       const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
       if (!dirInfo.exists) {
+        console.log('FaceDB directory does not exist, creating it...');
+        await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
         return [];
       }
 
       const files = await FileSystem.readDirectoryAsync(this.faceDbPath);
+      console.log('Found files in FaceDB:', files);
+      
       const imageFiles = files.filter(file => 
         /\.(jpg|jpeg|png|bmp)$/i.test(file)
       );
+      console.log('Image files:', imageFiles);
 
       const images = await Promise.all(
         imageFiles.map(async (filename) => {
-          const uri = `${this.faceDbPath}${filename}`;
-          return { filename, uri };
+          const filePath = `${this.faceDbPath}${filename}`;
+          
+          // For Android, convert to base64 for display
+          try {
+            const base64 = await FileSystem.readAsStringAsync(filePath, {
+              encoding: FileSystem.EncodingType.Base64,
+            });
+            
+            // Detect image type from filename
+            const extension = filename.toLowerCase().split('.').pop();
+            let mimeType = 'image/jpeg';
+            if (extension === 'png') mimeType = 'image/png';
+            else if (extension === 'bmp') mimeType = 'image/bmp';
+            
+            const uri = `data:${mimeType};base64,${base64}`;
+            
+            return { filename, uri, filePath };
+          } catch (error) {
+            console.error(`Failed to read image ${filename}:`, error);
+            return { filename, uri: null, filePath };
+          }
         })
       );
 
-      return images;
+      console.log(`Loaded ${images.length} images from FaceDB`);
+      return images.filter(img => img.uri !== null); // Only return successfully loaded images
     } catch (error) {
       console.error('Failed to get face database images:', error);
       return [];
