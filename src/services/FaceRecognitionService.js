@@ -8,7 +8,7 @@ class FaceRecognitionService {
     this.faceDatabase = new Map(); // Map of filename -> face descriptor
     this.faceDbPath = Platform.OS === 'web' 
       ? '/FaceDB' 
-      : `${FileSystem.documentDirectory}FaceDB`;
+      : `${FileSystem.documentDirectory}FaceDB/`;
   }
 
   async initialize() {
@@ -37,6 +37,107 @@ class FaceRecognitionService {
       console.log('Face Recognition Service initialized');
     } catch (error) {
       console.error('Failed to initialize Face Recognition Service:', error);
+      throw error;
+    }
+  }
+
+  async getFaceDbImages() {
+    try {
+      if (Platform.OS === 'web') {
+        // Return demo images for web
+        return [
+          { filename: 'demo_face_1.jpg', uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' },
+          { filename: 'demo_face_2.jpg', uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' },
+          { filename: 'demo_face_3.jpg', uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' }
+        ];
+      }
+
+      const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
+      if (!dirInfo.exists) {
+        return [];
+      }
+
+      const files = await FileSystem.readDirectoryAsync(this.faceDbPath);
+      const imageFiles = files.filter(file => 
+        /\.(jpg|jpeg|png|bmp)$/i.test(file)
+      );
+
+      const images = await Promise.all(
+        imageFiles.map(async (filename) => {
+          const uri = `${this.faceDbPath}${filename}`;
+          return { filename, uri };
+        })
+      );
+
+      return images;
+    } catch (error) {
+      console.error('Failed to get face database images:', error);
+      return [];
+    }
+  }
+
+  async addImageToFaceDb(sourceUri, filename) {
+    try {
+      if (Platform.OS === 'web') {
+        console.log('Web demo: Would add image to face database');
+        return true;
+      }
+
+      // Ensure FaceDB directory exists
+      const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
+      if (!dirInfo.exists) {
+        await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
+      }
+
+      // Generate unique filename if not provided
+      if (!filename) {
+        const timestamp = Date.now();
+        filename = `face_${timestamp}.jpg`;
+      }
+
+      const targetUri = `${this.faceDbPath}${filename}`;
+      
+      // Copy image to FaceDB directory
+      await FileSystem.copyAsync({
+        from: sourceUri,
+        to: targetUri
+      });
+
+      console.log(`Added image to face database: ${filename}`);
+      
+      // Reload face database to include new image
+      await this.loadFaceDatabase();
+      
+      return true;
+    } catch (error) {
+      console.error('Failed to add image to face database:', error);
+      throw error;
+    }
+  }
+
+  async removeImageFromFaceDb(filename) {
+    try {
+      if (Platform.OS === 'web') {
+        console.log('Web demo: Would remove image from face database');
+        return true;
+      }
+
+      const targetUri = `${this.faceDbPath}${filename}`;
+      const fileInfo = await FileSystem.getInfoAsync(targetUri);
+      
+      if (fileInfo.exists) {
+        await FileSystem.deleteAsync(targetUri);
+        console.log(`Removed image from face database: ${filename}`);
+        
+        // Remove from in-memory database
+        this.faceDatabase.delete(filename);
+        
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      console.error('Failed to remove image from face database:', error);
       throw error;
     }
   }
@@ -76,7 +177,7 @@ class FaceRecognitionService {
       // Process each image file
       for (const file of imageFiles) {
         try {
-          const filePath = `${this.faceDbPath}/${file}`;
+          const filePath = `${this.faceDbPath}${file}`;
           const descriptor = await this.extractFaceDescriptor(filePath);
           if (descriptor) {
             this.faceDatabase.set(file, descriptor);

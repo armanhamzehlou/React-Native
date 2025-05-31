@@ -10,16 +10,29 @@ import {
   Linking,
   AppState,
   Platform,
-  PermissionsAndroid
+  PermissionsAndroid,
+  Image,
+  Modal,
+  FlatList,
+  TextInput,
+  Dimensions
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import * as ImagePicker from 'expo-image-picker';
 import FaceRecognitionService from './src/services/FaceRecognitionService';
+
+const { width } = Dimensions.get('window');
 
 export default function App() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [faceDbCount, setFaceDbCount] = useState(0);
+  const [faceDbImages, setFaceDbImages] = useState([]);
   const [lastResult, setLastResult] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showFaceDbModal, setShowFaceDbModal] = useState(false);
+  const [showTestModal, setShowTestModal] = useState(false);
+  const [testImage, setTestImage] = useState(null);
+  const [newFaceName, setNewFaceName] = useState('');
 
   useEffect(() => {
     const setupApp = async () => {
@@ -51,6 +64,7 @@ export default function App() {
       const permissions = [
         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.CAMERA,
       ];
 
       const granted = await PermissionsAndroid.requestMultiple(permissions);
@@ -62,9 +76,17 @@ export default function App() {
       if (!allGranted) {
         Alert.alert(
           'Permissions Required',
-          'This app needs storage permissions to access face images.',
+          'This app needs storage and camera permissions to work properly.',
           [{ text: 'OK' }]
         );
+      }
+
+      // Request media library permissions for Expo
+      if (Platform.OS !== 'web') {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Media library permission is required to select images');
+        }
       }
     } catch (error) {
       console.error('Permission request error:', error);
@@ -77,9 +99,19 @@ export default function App() {
       const count = await FaceRecognitionService.loadFaceDatabase();
       setFaceDbCount(count);
       setIsInitialized(true);
+      await loadFaceDbImages();
     } catch (error) {
       console.error('Failed to initialize app:', error);
       Alert.alert('Initialization Error', error.message);
+    }
+  };
+
+  const loadFaceDbImages = async () => {
+    try {
+      const images = await FaceRecognitionService.getFaceDbImages();
+      setFaceDbImages(images);
+    } catch (error) {
+      console.error('Failed to load face database images:', error);
     }
   };
 
@@ -139,32 +171,119 @@ export default function App() {
     try {
       const count = await FaceRecognitionService.loadFaceDatabase();
       setFaceDbCount(count);
+      await loadFaceDbImages();
       Alert.alert('Database Reloaded', `Loaded ${count} face images`);
     } catch (error) {
       Alert.alert('Error', 'Failed to reload database');
     }
   };
 
-  const testFaceMatch = async () => {
+  const pickImageFromGallery = async () => {
     try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        return result.assets[0].uri;
+      }
+      return null;
+    } catch (error) {
+      console.error('Image picker error:', error);
+      Alert.alert('Error', 'Failed to pick image from gallery');
+      return null;
+    }
+  };
+
+  const addFaceToDatabase = async () => {
+    try {
+      const imageUri = await pickImageFromGallery();
+      if (!imageUri) return;
+
+      Alert.prompt(
+        'Add Face to Database',
+        'Enter a name for this face:',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Add',
+            onPress: async (name) => {
+              if (name && name.trim()) {
+                try {
+                  const filename = `${name.trim().replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+                  await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
+                  Alert.alert('Success', `Face added to database as ${filename}`);
+                  await reloadDatabase();
+                } catch (error) {
+                  Alert.alert('Error', 'Failed to add face to database');
+                }
+              }
+            }
+          }
+        ],
+        'plain-text'
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to add face to database');
+    }
+  };
+
+  const removeFaceFromDatabase = async (filename) => {
+    Alert.alert(
+      'Remove Face',
+      `Are you sure you want to remove ${filename} from the database?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Remove',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await FaceRecognitionService.removeImageFromFaceDb(filename);
+              Alert.alert('Success', 'Face removed from database');
+              await reloadDatabase();
+            } catch (error) {
+              Alert.alert('Error', 'Failed to remove face from database');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const testCustomImage = async () => {
+    try {
+      const imageUri = await pickImageFromGallery();
+      if (!imageUri) return;
+
+      setTestImage(imageUri);
       setIsProcessing(true);
-      // Test with a simulated path for demo
-      const testPath = '/storage/emulated/0/FaceDB/test.jpg';
-      const result = await FaceRecognitionService.matchFace(testPath);
+      
+      const result = await FaceRecognitionService.matchFace(imageUri);
       setLastResult(result);
       setIsProcessing(false);
-      
-      Alert.alert(
-        'Test Result',
-        result.match === 'yes' 
-          ? `Match: ${result.filename} (${result.confidence})`
-          : result.error || 'No match found'
-      );
+      setShowTestModal(true);
     } catch (error) {
       setIsProcessing(false);
       Alert.alert('Test Error', error.message);
     }
   };
+
+  const renderFaceDbItem = ({ item }) => (
+    <View style={styles.faceItem}>
+      <Image source={{ uri: item.uri }} style={styles.faceImage} />
+      <Text style={styles.faceFilename} numberOfLines={2}>{item.filename}</Text>
+      <TouchableOpacity 
+        style={styles.removeButton}
+        onPress={() => removeFaceFromDatabase(item.filename)}
+      >
+        <Text style={styles.removeButtonText}>×</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   if (Platform.OS !== 'android' && Platform.OS !== 'web') {
     return (
@@ -192,11 +311,26 @@ export default function App() {
           <Text style={styles.info}>
             Face Images Loaded: {faceDbCount}
           </Text>
+          <View style={styles.buttonRow}>
+            <TouchableOpacity style={styles.button} onPress={reloadDatabase}>
+              <Text style={styles.buttonText}>Reload Database</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.button} onPress={() => setShowFaceDbModal(true)}>
+              <Text style={styles.buttonText}>View Database</Text>
+            </TouchableOpacity>
+          </View>
+          <TouchableOpacity style={[styles.button, styles.addButton]} onPress={addFaceToDatabase}>
+            <Text style={styles.buttonText}>+ Add Face from Gallery</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Face Testing</Text>
           <Text style={styles.info}>
-            Path: /storage/emulated/0/FaceDB/
+            Test face recognition with custom images
           </Text>
-          <TouchableOpacity style={styles.button} onPress={reloadDatabase}>
-            <Text style={styles.buttonText}>Reload Database</Text>
+          <TouchableOpacity style={[styles.button, styles.testButton]} onPress={testCustomImage}>
+            <Text style={styles.buttonText}>🔍 Test Custom Image</Text>
           </TouchableOpacity>
         </View>
 
@@ -205,9 +339,6 @@ export default function App() {
           <Text style={styles.info}>
             Listening for: faceapp://match?path=...
           </Text>
-          <TouchableOpacity style={styles.button} onPress={testFaceMatch}>
-            <Text style={styles.buttonText}>Test Face Match</Text>
-          </TouchableOpacity>
         </View>
 
         {isProcessing && (
@@ -252,23 +383,90 @@ export default function App() {
             )}
           </View>
         )}
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Setup Instructions</Text>
-          <Text style={styles.info}>
-            1. Create folder: /storage/emulated/0/FaceDB/
-          </Text>
-          <Text style={styles.info}>
-            2. Add face images (jpg, png, etc.)
-          </Text>
-          <Text style={styles.info}>
-            3. Tap "Reload Database"
-          </Text>
-          <Text style={styles.info}>
-            4. Test with other apps using deep links
-          </Text>
-        </View>
       </ScrollView>
+
+      {/* Face Database Modal */}
+      <Modal
+        visible={showFaceDbModal}
+        animationType="slide"
+        onRequestClose={() => setShowFaceDbModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Face Database ({faceDbImages.length})</Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowFaceDbModal(false)}
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={faceDbImages}
+            renderItem={renderFaceDbItem}
+            keyExtractor={(item) => item.filename}
+            numColumns={2}
+            contentContainerStyle={styles.faceGrid}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>No faces in database. Add some faces to get started!</Text>
+            }
+          />
+        </View>
+      </Modal>
+
+      {/* Test Image Modal */}
+      <Modal
+        visible={showTestModal}
+        animationType="slide"
+        onRequestClose={() => setShowTestModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Face Recognition Test</Text>
+            <TouchableOpacity 
+              style={styles.closeButton}
+              onPress={() => setShowTestModal(false)}
+            >
+              <Text style={styles.closeButtonText}>×</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.testContent}>
+            {testImage && (
+              <View style={styles.testImageContainer}>
+                <Text style={styles.testLabel}>Test Image:</Text>
+                <Image source={{ uri: testImage }} style={styles.testImage} />
+              </View>
+            )}
+            
+            {lastResult && (
+              <View style={styles.testResult}>
+                <Text style={styles.testLabel}>Result:</Text>
+                <View style={[
+                  styles.resultCard,
+                  {
+                    backgroundColor: lastResult.match === 'yes' ? '#e8f5e8' : 
+                                   lastResult.match === 'possible' ? '#fff3e0' : '#ffebee'
+                  }
+                ]}>
+                  <Text style={styles.resultText}>
+                    {lastResult.match === 'yes' 
+                      ? `✅ Match Found: ${lastResult.filename}`
+                      : lastResult.match === 'possible'
+                        ? `⚠️ Possible Match: ${lastResult.filename}`
+                        : '❌ No Match Found'
+                    }
+                  </Text>
+                  {lastResult.confidence && (
+                    <Text style={styles.resultConfidence}>
+                      Confidence: {(parseFloat(lastResult.confidence) * 100).toFixed(1)}%
+                    </Text>
+                  )}
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -321,11 +519,24 @@ const styles = StyleSheet.create({
     color: '#666',
     marginBottom: 5,
   },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 10,
+  },
   button: {
     backgroundColor: '#2196F3',
     padding: 12,
     borderRadius: 6,
     marginTop: 10,
+    flex: 1,
+    marginHorizontal: 2,
+  },
+  addButton: {
+    backgroundColor: '#4CAF50',
+  },
+  testButton: {
+    backgroundColor: '#FF9800',
   },
   buttonText: {
     color: 'white',
@@ -383,5 +594,118 @@ const styles = StyleSheet.create({
     color: '#FF9800',
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'white',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    paddingTop: 50,
+    backgroundColor: '#2196F3',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  faceGrid: {
+    padding: 10,
+  },
+  faceItem: {
+    width: (width - 30) / 2 - 10,
+    margin: 5,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 10,
+    elevation: 2,
+    position: 'relative',
+  },
+  faceImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 6,
+    backgroundColor: '#f0f0f0',
+  },
+  faceFilename: {
+    fontSize: 12,
+    marginTop: 5,
+    textAlign: 'center',
+    color: '#333',
+  },
+  removeButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 25,
+    height: 25,
+    borderRadius: 12.5,
+    backgroundColor: '#f44336',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    color: '#666',
+    fontSize: 16,
+    marginTop: 50,
+  },
+  testContent: {
+    flex: 1,
+    padding: 20,
+  },
+  testImageContainer: {
+    marginBottom: 20,
+  },
+  testLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  testImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  testResult: {
+    marginTop: 20,
+  },
+  resultCard: {
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  resultText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  resultConfidence: {
+    fontSize: 14,
+    color: '#666',
   },
 });
