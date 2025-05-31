@@ -1,28 +1,36 @@
+
 import { NativeModules, Platform } from 'react-native';
-import RNFS from 'react-native-fs';
+import * as FileSystem from 'expo-file-system';
 
 class FaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.faceDatabase = new Map(); // Map of filename -> face descriptor
-    this.faceDbPath = `${RNFS.ExternalStorageDirectoryPath}/FaceDB`;
+    this.faceDbPath = Platform.OS === 'web' 
+      ? '/FaceDB' 
+      : `${FileSystem.documentDirectory}FaceDB`;
   }
 
   async initialize() {
     if (this.isInitialized) return;
 
     try {
-      if (Platform.OS !== 'android') {
-        throw new Error('This service only supports Android');
+      if (Platform.OS === 'web') {
+        console.log('Web environment detected - running in demo mode');
+        console.log('TensorFlow.js and face-api.js would be loaded here in production');
+      } else if (Platform.OS !== 'android') {
+        throw new Error('This service only supports Android and web demo');
       }
 
-      console.log('Initializing Face Recognition Service for Android');
+      console.log('Initializing Face Recognition Service for', Platform.OS);
 
       // Create FaceDB directory if it doesn't exist
-      const exists = await RNFS.exists(this.faceDbPath);
-      if (!exists) {
-        await RNFS.mkdir(this.faceDbPath);
-        console.log('Created FaceDB directory:', this.faceDbPath);
+      if (Platform.OS !== 'web') {
+        const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
+        if (!dirInfo.exists) {
+          await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
+          console.log('Created FaceDB directory:', this.faceDbPath);
+        }
       }
 
       this.isInitialized = true;
@@ -35,18 +43,29 @@ class FaceRecognitionService {
 
   async loadFaceDatabase() {
     try {
+      if (Platform.OS === 'web') {
+        console.log('Running in web environment - simulating face database');
+        // Simulate loading faces for web demo
+        this.faceDatabase.clear();
+        this.faceDatabase.set('demo_face_1.jpg', new Float32Array(128).fill(0.1));
+        this.faceDatabase.set('demo_face_2.jpg', new Float32Array(128).fill(0.2));
+        this.faceDatabase.set('demo_face_3.jpg', new Float32Array(128).fill(0.3));
+        console.log('Simulated face database with 3 faces');
+        return 3;
+      }
+
       // Check if FaceDB directory exists
-      const exists = await RNFS.exists(this.faceDbPath);
-      if (!exists) {
+      const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
+      if (!dirInfo.exists) {
         console.log('Creating FaceDB directory:', this.faceDbPath);
-        await RNFS.mkdir(this.faceDbPath);
+        await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
         return 0;
       }
 
       // Read all image files from the directory
-      const files = await RNFS.readDir(this.faceDbPath);
+      const files = await FileSystem.readDirectoryAsync(this.faceDbPath);
       const imageFiles = files.filter(file => 
-        file.isFile() && /\.(jpg|jpeg|png|bmp)$/i.test(file.name)
+        /\.(jpg|jpeg|png|bmp)$/i.test(file)
       );
 
       console.log(`Found ${imageFiles.length} image files in FaceDB`);
@@ -57,13 +76,14 @@ class FaceRecognitionService {
       // Process each image file
       for (const file of imageFiles) {
         try {
-          const descriptor = await this.extractFaceDescriptor(file.path);
+          const filePath = `${this.faceDbPath}/${file}`;
+          const descriptor = await this.extractFaceDescriptor(filePath);
           if (descriptor) {
-            this.faceDatabase.set(file.name, descriptor);
-            console.log(`Loaded face descriptor for: ${file.name}`);
+            this.faceDatabase.set(file, descriptor);
+            console.log(`Loaded face descriptor for: ${file}`);
           }
         } catch (error) {
-          console.error(`Failed to process ${file.name}:`, error);
+          console.error(`Failed to process ${file}:`, error);
         }
       }
 
@@ -79,19 +99,37 @@ class FaceRecognitionService {
     try {
       console.log(`Extracting face descriptor from: ${imagePath}`);
 
-      // For Android 8/9, we'll use a simplified approach
-      // In production, you'd integrate with Android's face detection APIs
-      // or use a native module with OpenCV/ML Kit
+      if (Platform.OS === 'web') {
+        // Generate a simple descriptor for web demo
+        const descriptor = new Float32Array(128);
+        let hash = imagePath.length;
+        
+        for (let i = 0; i < 128; i++) {
+          hash = ((hash * 1103515245) + 12345) & 0x7fffffff;
+          descriptor[i] = (hash / 0x7fffffff) * 2 - 1;
+        }
+        
+        return descriptor;
+      }
 
-      // Generate a hash-based descriptor from image file
-      const fileInfo = await RNFS.stat(imagePath);
-      const imageData = await RNFS.readFile(imagePath, 'base64');
+      // For Android, use a simplified approach
+      // In production, integrate with face-api.js or ML Kit
+      const fileInfo = await FileSystem.getInfoAsync(imagePath);
+      if (!fileInfo.exists) {
+        console.error('Image file does not exist:', imagePath);
+        return null;
+      }
+
+      // Read file as base64 for processing
+      const imageData = await FileSystem.readAsStringAsync(imagePath, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
       // Create a simple descriptor based on image characteristics
       const descriptor = new Float32Array(128);
       let hash = 0;
 
-      // Simple hash from file size and first/last bytes
+      // Simple hash from file size and base64 data
       for (let i = 0; i < Math.min(imageData.length, 1000); i++) {
         hash = ((hash << 5) - hash + imageData.charCodeAt(i)) & 0xffffffff;
       }
@@ -117,9 +155,25 @@ class FaceRecognitionService {
 
       console.log(`Matching face from: ${imagePath}`);
 
+      if (Platform.OS === 'web') {
+        // Simulate face matching for web demo
+        const matches = Array.from(this.faceDatabase.keys());
+        if (matches.length > 0) {
+          const randomMatch = matches[Math.floor(Math.random() * matches.length)];
+          const confidence = (0.7 + Math.random() * 0.2).toFixed(3);
+          return {
+            match: 'yes',
+            filename: randomMatch,
+            confidence: confidence
+          };
+        } else {
+          return { match: 'no' };
+        }
+      }
+
       // Check if image file exists
-      const exists = await RNFS.exists(imagePath);
-      if (!exists) {
+      const fileInfo = await FileSystem.getInfoAsync(imagePath);
+      if (!fileInfo.exists) {
         throw new Error(`Image file not found: ${imagePath}`);
       }
 

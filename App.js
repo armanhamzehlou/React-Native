@@ -22,20 +22,25 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    if (Platform.OS === 'android') {
-      requestPermissions().then(() => {
-        initializeApp();
+    const setupApp = async () => {
+      if (Platform.OS === 'android' || Platform.OS === 'web') {
+        if (Platform.OS === 'android') {
+          await requestPermissions();
+        }
+        await initializeApp();
         setupDeepLinkHandler();
-      });
-    } else {
-      Alert.alert('Platform Not Supported', 'This app only works on Android devices.');
-    }
+      } else {
+        Alert.alert('Platform Not Supported', 'This app works on Android devices and web demo.');
+      }
+    };
 
     const handleAppStateChange = (nextAppState) => {
       if (nextAppState === 'active') {
         handleDeepLink();
       }
     };
+
+    setupApp();
 
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription?.remove();
@@ -161,11 +166,11 @@ export default function App() {
     }
   };
 
-  if (Platform.OS !== 'android') {
+  if (Platform.OS !== 'android' && Platform.OS !== 'web') {
     return (
       <View style={[styles.container, styles.centered]}>
         <Text style={styles.errorText}>Android Only</Text>
-        <Text style={styles.info}>This app only works on Android devices.</Text>
+        <Text style={styles.info}>This app works on Android devices and web demo.</Text>
       </View>
     );
   }
@@ -177,7 +182,7 @@ export default function App() {
       <View style={styles.header}>
         <Text style={styles.title}>Face Recognition Service</Text>
         <Text style={styles.subtitle}>
-          {isInitialized ? '✅ Ready for Android' : '⏳ Initializing...'}
+          {isInitialized ? `✅ Ready for ${Platform.OS}` : '⏳ Initializing...'}
         </Text>
       </View>
 
