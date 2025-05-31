@@ -1,0 +1,110 @@
+✅ Project Plan: React Native Local Facial Recognition Service App
+🧩 Purpose
+Build an Android app (React Native) that functions as a local facial recognition service:
+
+It matches an input image (file path) against a local folder of face images (the face DB).
+
+It responds with whether there is a match.
+
+If a match is found, it returns the file name of the matched image.
+
+🔄 New Stack Decision
+Feature	New Plan
+Platform	React Native
+Facial Recognition	Use a free SDK or library like Faceplugin React Native SDK or face-api.js ported via TensorFlow.js
+Python	❌ Not using Chaquopy or DeepFace anymore
+Offline Mode	✅ All matching happens on-device
+External Calls	✅ Triggered via Intent, or custom URI scheme / Deep Link / Broadcast
+Input Format	Absolute file path to an image (e.g. from camera or file picker)
+DB of Faces	Local folder, e.g. /storage/emulated/0/FaceDB/
+Output	JSON response:
+
+json
+Copy
+Edit
+{ "match": "yes", "filename": "zahra.jpg" }
+or:
+
+json
+Copy
+Edit
+{ "match": "no" }
+🏗️ Functional Requirements
+Initialize Face DB
+
+On app start, scan a local folder (e.g. /FaceDB/) and load all images into memory or index them.
+
+Use embedded face embeddings for performance if supported.
+
+Expose API to External Callers
+
+Support image input from other apps using:
+
+Custom Intent or BroadcastReceiver
+
+Or deep link scheme like faceapp://match?path=/storage/emulated/0/DCIM/photo.jpg
+
+Face Matching
+
+When a new image is passed in:
+
+Load and extract face embedding
+
+Compare it with all embeddings in DB
+
+If match (distance below threshold): return matched file name
+
+Else: return no match
+
+Return Result to Caller
+
+Use Intent result, a notification, or REST-style response if using internal HTTP server (optional)
+
+🧰 Suggested Free SDKs / Libraries
+Choose one of the following (sorted by ease of use and compatibility):
+
+1. ✅ Faceplugin React Native SDK
+Fully free and open-source
+
+Offline, runs on device
+
+Face recognition and liveness detection
+
+2. 🧪 TensorFlow.js + face-api.js (ported to React Native)
+Runs in WebView or using react-native-tensorflow-lite
+
+May need performance tuning
+
+3. ⚙️ OpenCV with custom face recognition logic
+Use react-native-opencv3 or native module
+
+More work, but very customizable
+
+📝 Example Intent Format (from another app)
+javascript
+Copy
+Edit
+Intent intent = new Intent("com.myfacematcher.MATCH");
+intent.putExtra("imagePath", "/storage/emulated/0/DCIM/photo.jpg");
+startActivityForResult(intent, 111);
+Expected Response:
+
+json
+Copy
+Edit
+{ "match": "yes", "filename": "ali_face.jpg" }
+or:
+
+json
+Copy
+Edit
+{ "match": "no" }
+🛠️ Development Notes
+Use react-native-fs to scan and read files from device storage.
+
+Handle runtime storage permissions.
+
+Use background threads for face matching to avoid UI freezing.
+
+Optional: build a debug UI to test face matching manually.
+
