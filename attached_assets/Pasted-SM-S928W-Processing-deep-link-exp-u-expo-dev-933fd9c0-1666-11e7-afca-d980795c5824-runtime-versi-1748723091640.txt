@@ -1,0 +1,78 @@
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A52.0.0&channel-name=production&snack=%40git%2Fgithub.com%2Farmanhamzehlou%2FReact-Native&snack-channel=wRTyxg11w4
+SM-S928W:
+Reloading face database...
+SM-S928W:
+Found 0 image files in FaceDB
+SM-S928W:
+Face database loaded with 0 faces
+SM-S928W:
+Database loaded with 0 faces
+SM-S928W:
+Loading face database images...
+SM-S928W:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+SM-S928W:
+Found files in FaceDB: []
+SM-S928W:
+Image files: []
+SM-S928W:
+Loaded 0 images from FaceDB
+SM-S928W:
+Loaded images: 0 []
+SM-S928W:
+Starting image picker...
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A52.0.0&channel-name=production&snack=%40git%2Fgithub.com%2Farmanhamzehlou%2FReact-Native&snack-channel=wRTyxg11w4
+SM-S928W:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/b101c047-e62a-40f6-b0ca-873161ee0d1c.jpeg
+SM-S928W:
+Selected image URI: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/b101c047-e62a-40f6-b0ca-873161ee0d1c.jpeg
+SM-S928W:
+Reloading face database...
+SM-S928W:
+Found 0 image files in FaceDB
+SM-S928W:
+Face database loaded with 0 faces
+SM-S928W:
+Database loaded with 0 faces
+SM-S928W:
+Loading face database images...
+SM-S928W:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+SM-S928W:
+Found files in FaceDB: []
+SM-S928W:
+Image files: []
+SM-S928W:
+Loaded 0 images from FaceDB
+SM-S928W:
+Loaded images: 0 []
+SM-S928W:
+Starting image picker...
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A52.0.0&channel-name=production&snack=%40git%2Fgithub.com%2Farmanhamzehlou%2FReact-Native&snack-channel=wRTyxg11w4
+SM-S928W:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/34598d11-f1cc-49f6-8a3c-d249041b7023.png
+SM-S928W:
+Selected image URI: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/34598d11-f1cc-49f6-8a3c-d249041b7023.png
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A52.0.0&channel-name=production&snack=%40git%2Fgithub.com%2Farmanhamzehlou%2FReact-Native&snack-channel=wRTyxg11w4
+SM-S928W:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/b148916c-5d24-4f1a-aa99-a17acf5fae14.png
+SM-S928W:
+Face Recognition Service not initialized - calling initialize()
+SM-S928W:
+Initializing Face Recognition Service for android
+SM-S928W:
+Creating FaceDB directory at: file:///data/user/0/host.exp.exponent/files/FaceDB/
+SM-S928W:
+Directory check result: {"exists":true,"isDirectory":true,"uri":"file:///data/user/0/host.exp.exponent/files/FaceDB","size":0,"modificationTime":1748721836.516}
+SM-S928W:
+FaceDB directory already exists
+SM-S928W:
+Face Recognition Service initialized successfully
+SM-S928W:
+Matching face from: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/b148916c-5d24-4f1a-aa99-a17acf5fae14.png
+SM-S928W:
+Extracting face descriptor from: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/b148916c-5d24-4f1a-aa99-a17acf5fae14.png
