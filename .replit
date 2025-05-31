@@ -9,7 +9,7 @@ channel = "stable-23_11"
 language = "nodejs"
 
 [workflows]
-runButton = "Start React Native"
+runButton = "Face Recognition API Server"
 
 [[workflows.workflow]]
 name = "Start React Native"
@@ -24,6 +24,15 @@ args = "npm install"
 task = "shell.exec"
 args = "npm run web"
 
+[[workflows.workflow]]
+name = "Face Recognition API Server"
+author = 9465246
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node server.js"
+
 [[ports]]
 localPort = 8081
 externalPort = 80
@@ -35,3 +44,6 @@ externalPort = 3001
 [[ports]]
 localPort = 19006
 externalPort = 3000
+
+[deployment]
+run = ["sh", "-c", "node server.js"]

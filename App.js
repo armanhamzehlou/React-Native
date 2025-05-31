@@ -22,6 +22,7 @@ export default function App() {
   useEffect(() => {
     initializeApp();
     setupDeepLinkHandler();
+    startBackgroundService();
 
     const handleAppStateChange = (nextAppState) => {
       if (nextAppState === 'active') {
@@ -42,6 +43,21 @@ export default function App() {
     } catch (error) {
       console.error('Failed to initialize app:', error);
       Alert.alert('Initialization Error', error.message);
+    }
+  };
+
+  const startBackgroundService = () => {
+    try {
+      // For React Native, we need to use NativeModules to start Android service
+      const { NativeModules, Platform } = require('react-native');
+      
+      if (Platform.OS === 'android') {
+        // This would require a native module bridge (simplified for demo)
+        console.log('Background service would be started here on Android device');
+        // In production: NativeModules.ServiceManager.startFaceRecognitionService();
+      }
+    } catch (error) {
+      console.log('Background service not available in current environment');
     }
   };
 
