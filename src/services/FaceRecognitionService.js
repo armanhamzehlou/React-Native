@@ -1,48 +1,63 @@
 
 // Import conditionally for web/mobile compatibility
-let tf, faceapi, RNFS;
-
-try {
-  tf = require('@tensorflow/tfjs');
-  if (typeof window !== 'undefined') {
-    // Web environment
-    console.log('Running in web environment');
-  } else {
-    // React Native environment
-    require('@tensorflow/tfjs-react-native');
-  }
-} catch (error) {
-  console.warn('TensorFlow.js not available:', error.message);
-}
-
-try {
-  faceapi = require('face-api.js');
-} catch (error) {
-  console.warn('face-api.js not available:', error.message);
-}
-
-try {
-  RNFS = require('react-native-fs');
-} catch (error) {
-  console.warn('react-native-fs not available:', error.message);
-}
-
 class FaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.faceDatabase = new Map(); // Map of filename -> face descriptor
-    this.faceDbPath = RNFS ? `${RNFS.ExternalStorageDirectoryPath}/FaceDB` : '/FaceDB';
     this.modelsLoaded = false;
     this.isWebEnvironment = typeof window !== 'undefined';
+    this.tf = null;
+    this.faceapi = null;
+    this.RNFS = null;
+    this.faceDbPath = '/FaceDB'; // Will be updated after RNFS loads
+  }
+
+  async loadDependencies() {
+    try {
+      // Try to load TensorFlow.js
+      try {
+        this.tf = await import('@tensorflow/tfjs');
+        if (!this.isWebEnvironment) {
+          await import('@tensorflow/tfjs-react-native');
+        }
+        console.log('TensorFlow.js loaded successfully');
+      } catch (error) {
+        console.warn('TensorFlow.js not available:', error.message);
+      }
+
+      // Try to load face-api.js
+      try {
+        this.faceapi = await import('face-api.js');
+        console.log('face-api.js loaded successfully');
+      } catch (error) {
+        console.warn('face-api.js not available:', error.message);
+      }
+
+      // Try to load react-native-fs
+      try {
+        const rnfsModule = await import('react-native-fs');
+        this.RNFS = rnfsModule.default;
+        this.faceDbPath = `${this.RNFS.ExternalStorageDirectoryPath}/FaceDB`;
+        console.log('react-native-fs loaded successfully');
+      } catch (error) {
+        console.warn('react-native-fs not available:', error.message);
+      }
+
+    } catch (error) {
+      console.warn('Some dependencies failed to load:', error.message);
+    }
   }
 
   async initialize() {
     if (this.isInitialized) return;
 
     try {
-      if (tf) {
+      // Load dependencies first
+      await this.loadDependencies();
+
+      if (this.tf) {
         // Initialize TensorFlow
-        await tf.ready();
+        await this.tf.ready();
         console.log('TensorFlow.js initialized');
       } else {
         console.log('TensorFlow.js not available - running in demo mode');
@@ -66,9 +81,9 @@ class FaceRecognitionService {
       console.log('Loading face detection models...');
       
       // In a real implementation, you would load the actual models:
-      // await faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
-      // await faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models');
-      // await faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models');
+      // await this.faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
+      // await this.faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models');
+      // await this.faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models');
       
       this.modelsLoaded = true;
       console.log('Models loaded successfully');
@@ -80,7 +95,7 @@ class FaceRecognitionService {
 
   async loadFaceDatabase() {
     try {
-      if (!RNFS) {
+      if (!this.RNFS) {
         console.log('Running in web environment - simulating face database');
         // Simulate some test faces for web demo
         this.faceDatabase.clear();
@@ -97,15 +112,15 @@ class FaceRecognitionService {
       }
 
       // Check if FaceDB directory exists
-      const exists = await RNFS.exists(this.faceDbPath);
+      const exists = await this.RNFS.exists(this.faceDbPath);
       if (!exists) {
         console.log('Creating FaceDB directory:', this.faceDbPath);
-        await RNFS.mkdir(this.faceDbPath);
+        await this.RNFS.mkdir(this.faceDbPath);
         return 0;
       }
 
       // Read all image files from the directory
-      const files = await RNFS.readDir(this.faceDbPath);
+      const files = await this.RNFS.readDir(this.faceDbPath);
       const imageFiles = files.filter(file => 
         file.isFile() && /\.(jpg|jpeg|png|bmp)$/i.test(file.name)
       );
@@ -168,8 +183,8 @@ class FaceRecognitionService {
       console.log(`Matching face from: ${imagePath}`);
 
       // Check if image file exists (skip check in web environment)
-      if (RNFS) {
-        const exists = await RNFS.exists(imagePath);
+      if (this.RNFS) {
+        const exists = await this.RNFS.exists(imagePath);
         if (!exists) {
           throw new Error(`Image file not found: ${imagePath}`);
         }
