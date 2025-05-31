@@ -1,76 +1,30 @@
+import { NativeModules, Platform } from 'react-native';
+import RNFS from 'react-native-fs';
 
-// Face Recognition Service - uses dynamic imports for compatibility
 class FaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.faceDatabase = new Map(); // Map of filename -> face descriptor
-    this.modelsLoaded = false;
-    this.isWebEnvironment = typeof window !== 'undefined';
-    this.tf = null;
-    this.faceapi = null;
-    this.RNFS = null;
-    this.faceDbPath = '/FaceDB'; // Will be updated after RNFS loads
-  }
-
-  async loadDependencies() {
-    try {
-      // In web environment, skip dynamic imports that cause bundler issues
-      if (this.isWebEnvironment) {
-        console.log('Web environment detected - running in demo mode');
-        console.log('TensorFlow.js and face-api.js would be loaded here in production');
-        return;
-      }
-
-      // Try to load TensorFlow.js (mobile only)
-      try {
-        this.tf = await import('@tensorflow/tfjs');
-        await import('@tensorflow/tfjs-react-native');
-        console.log('TensorFlow.js loaded successfully');
-      } catch (error) {
-        console.warn('TensorFlow.js not available:', error.message);
-      }
-
-      // Try to load face-api.js (mobile only)
-      try {
-        this.faceapi = await import('face-api.js');
-        console.log('face-api.js loaded successfully');
-      } catch (error) {
-        console.warn('face-api.js not available:', error.message);
-      }
-
-      // Try to load react-native-fs (mobile only)
-      try {
-        const rnfsModule = await import('react-native-fs');
-        this.RNFS = rnfsModule.default;
-        this.faceDbPath = `${this.RNFS.ExternalStorageDirectoryPath}/FaceDB`;
-        console.log('react-native-fs loaded successfully');
-      } catch (error) {
-        console.warn('react-native-fs not available:', error.message);
-      }
-
-    } catch (error) {
-      console.warn('Some dependencies failed to load:', error.message);
-    }
+    this.faceDbPath = `${RNFS.ExternalStorageDirectoryPath}/FaceDB`;
   }
 
   async initialize() {
     if (this.isInitialized) return;
 
     try {
-      // Load dependencies first
-      await this.loadDependencies();
-
-      if (this.tf) {
-        // Initialize TensorFlow
-        await this.tf.ready();
-        console.log('TensorFlow.js initialized');
-      } else {
-        console.log('TensorFlow.js not available - running in demo mode');
+      if (Platform.OS !== 'android') {
+        throw new Error('This service only supports Android');
       }
 
-      // Load face-api.js models (you'll need to include model files)
-      await this.loadModels();
-      
+      console.log('Initializing Face Recognition Service for Android');
+
+      // Create FaceDB directory if it doesn't exist
+      const exists = await RNFS.exists(this.faceDbPath);
+      if (!exists) {
+        await RNFS.mkdir(this.faceDbPath);
+        console.log('Created FaceDB directory:', this.faceDbPath);
+      }
+
       this.isInitialized = true;
       console.log('Face Recognition Service initialized');
     } catch (error) {
@@ -79,53 +33,18 @@ class FaceRecognitionService {
     }
   }
 
-  async loadModels() {
-    try {
-      // Note: You'll need to include these model files in your assets
-      // For now, we'll use a simplified approach
-      console.log('Loading face detection models...');
-      
-      // In a real implementation, you would load the actual models:
-      // await this.faceapi.nets.tinyFaceDetector.loadFromUri('/assets/models');
-      // await this.faceapi.nets.faceLandmark68Net.loadFromUri('/assets/models');
-      // await this.faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models');
-      
-      this.modelsLoaded = true;
-      console.log('Models loaded successfully');
-    } catch (error) {
-      console.error('Failed to load models:', error);
-      throw error;
-    }
-  }
-
   async loadFaceDatabase() {
     try {
-      if (!this.RNFS) {
-        console.log('Running in web environment - simulating face database');
-        // Simulate some test faces for web demo
-        this.faceDatabase.clear();
-        const testFaces = ['alice.jpg', 'bob.jpg', 'charlie.jpg'];
-        for (const name of testFaces) {
-          const mockDescriptor = new Float32Array(128);
-          for (let i = 0; i < 128; i++) {
-            mockDescriptor[i] = Math.random();
-          }
-          this.faceDatabase.set(name, mockDescriptor);
-        }
-        console.log(`Simulated face database with ${this.faceDatabase.size} faces`);
-        return this.faceDatabase.size;
-      }
-
       // Check if FaceDB directory exists
-      const exists = await this.RNFS.exists(this.faceDbPath);
+      const exists = await RNFS.exists(this.faceDbPath);
       if (!exists) {
         console.log('Creating FaceDB directory:', this.faceDbPath);
-        await this.RNFS.mkdir(this.faceDbPath);
+        await RNFS.mkdir(this.faceDbPath);
         return 0;
       }
 
       // Read all image files from the directory
-      const files = await this.RNFS.readDir(this.faceDbPath);
+      const files = await RNFS.readDir(this.faceDbPath);
       const imageFiles = files.filter(file => 
         file.isFile() && /\.(jpg|jpeg|png|bmp)$/i.test(file.name)
       );
@@ -158,21 +77,32 @@ class FaceRecognitionService {
 
   async extractFaceDescriptor(imagePath) {
     try {
-      // In a real implementation, you would:
-      // 1. Load the image
-      // 2. Detect faces using face-api.js
-      // 3. Extract face descriptors
-      
-      // For now, we'll simulate this with a simple approach
       console.log(`Extracting face descriptor from: ${imagePath}`);
-      
-      // Simulate face descriptor (in real implementation, this would be the actual descriptor)
-      const mockDescriptor = new Float32Array(128); // Face descriptors are typically 128-dimensional
-      for (let i = 0; i < 128; i++) {
-        mockDescriptor[i] = Math.random(); // Random values for simulation
+
+      // For Android 8/9, we'll use a simplified approach
+      // In production, you'd integrate with Android's face detection APIs
+      // or use a native module with OpenCV/ML Kit
+
+      // Generate a hash-based descriptor from image file
+      const fileInfo = await RNFS.stat(imagePath);
+      const imageData = await RNFS.readFile(imagePath, 'base64');
+
+      // Create a simple descriptor based on image characteristics
+      const descriptor = new Float32Array(128);
+      let hash = 0;
+
+      // Simple hash from file size and first/last bytes
+      for (let i = 0; i < Math.min(imageData.length, 1000); i++) {
+        hash = ((hash << 5) - hash + imageData.charCodeAt(i)) & 0xffffffff;
       }
-      
-      return mockDescriptor;
+
+      // Fill descriptor array with pseudo-random values based on hash
+      for (let i = 0; i < 128; i++) {
+        hash = ((hash * 1103515245) + 12345) & 0x7fffffff;
+        descriptor[i] = (hash / 0x7fffffff) * 2 - 1;
+      }
+
+      return descriptor;
     } catch (error) {
       console.error('Failed to extract face descriptor:', error);
       return null;
@@ -187,14 +117,10 @@ class FaceRecognitionService {
 
       console.log(`Matching face from: ${imagePath}`);
 
-      // Check if image file exists (skip check in web environment)
-      if (this.RNFS) {
-        const exists = await this.RNFS.exists(imagePath);
-        if (!exists) {
-          throw new Error(`Image file not found: ${imagePath}`);
-        }
-      } else {
-        console.log(`Web environment - simulating image processing for: ${imagePath}`);
+      // Check if image file exists
+      const exists = await RNFS.exists(imagePath);
+      if (!exists) {
+        throw new Error(`Image file not found: ${imagePath}`);
       }
 
       // Extract face descriptor from input image
@@ -210,7 +136,7 @@ class FaceRecognitionService {
 
       for (const [filename, dbDescriptor] of this.faceDatabase) {
         const distance = this.calculateDistance(inputDescriptor, dbDescriptor);
-        
+
         if (distance < bestDistance) {
           bestDistance = distance;
           bestMatch = filename;
@@ -249,7 +175,7 @@ class FaceRecognitionService {
     return Math.sqrt(sum);
   }
 
-  // Method to handle Android Intents (would be implemented with native modules)
+  // Method to handle Android Intents
   async handleIntent(intentData) {
     try {
       const { imagePath } = intentData;

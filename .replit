@@ -33,6 +33,19 @@ mode = "sequential"
 task = "shell.exec"
 args = "node server.js"
 
+[[workflows.workflow]]
+name = "Build Android APK"
+author = 9465246
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx expo install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npx expo run:android"
+
 [[ports]]
 localPort = 8081
 externalPort = 80

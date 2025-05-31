@@ -8,7 +8,9 @@ import {
   TouchableOpacity, 
   ScrollView,
   Linking,
-  AppState
+  AppState,
+  Platform,
+  PermissionsAndroid
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import FaceRecognitionService from './src/services/FaceRecognitionService';
@@ -20,9 +22,14 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
-    initializeApp();
-    setupDeepLinkHandler();
-    startBackgroundService();
+    if (Platform.OS === 'android') {
+      requestPermissions().then(() => {
+        initializeApp();
+        setupDeepLinkHandler();
+      });
+    } else {
+      Alert.alert('Platform Not Supported', 'This app only works on Android devices.');
+    }
 
     const handleAppStateChange = (nextAppState) => {
       if (nextAppState === 'active') {
@@ -33,6 +40,31 @@ export default function App() {
     const subscription = AppState.addEventListener('change', handleAppStateChange);
     return () => subscription?.remove();
   }, []);
+
+  const requestPermissions = async () => {
+    try {
+      const permissions = [
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      ];
+
+      const granted = await PermissionsAndroid.requestMultiple(permissions);
+      
+      const allGranted = Object.values(granted).every(
+        permission => permission === PermissionsAndroid.RESULTS.GRANTED
+      );
+
+      if (!allGranted) {
+        Alert.alert(
+          'Permissions Required',
+          'This app needs storage permissions to access face images.',
+          [{ text: 'OK' }]
+        );
+      }
+    } catch (error) {
+      console.error('Permission request error:', error);
+    }
+  };
 
   const initializeApp = async () => {
     try {
@@ -46,93 +78,97 @@ export default function App() {
     }
   };
 
-  const startBackgroundService = () => {
-    try {
-      // For React Native, we need to use NativeModules to start Android service
-      const { NativeModules, Platform } = require('react-native');
-      
-      if (Platform.OS === 'android') {
-        // This would require a native module bridge (simplified for demo)
-        console.log('Background service would be started here on Android device');
-        // In production: NativeModules.ServiceManager.startFaceRecognitionService();
-      }
-    } catch (error) {
-      console.log('Background service not available in current environment');
-    }
-  };
-
   const setupDeepLinkHandler = () => {
-    // Handle deep links when app is already open
     Linking.addEventListener('url', handleDeepLinkEvent);
-    
-    // Handle deep links when app is opened from closed state
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        processDeepLink(url);
-      }
-    });
+    handleDeepLink(); // Handle initial URL if app was opened via deep link
   };
 
   const handleDeepLinkEvent = (event) => {
-    processDeepLink(event.url);
+    if (event && event.url) {
+      processDeepLink(event.url);
+    }
   };
 
   const handleDeepLink = async () => {
-    const url = await Linking.getInitialURL();
-    if (url) {
-      processDeepLink(url);
+    try {
+      const initialUrl = await Linking.getInitialURL();
+      if (initialUrl) {
+        processDeepLink(initialUrl);
+      }
+    } catch (error) {
+      console.error('Error handling initial URL:', error);
     }
   };
 
   const processDeepLink = async (url) => {
-    if (!url || !isInitialized) return;
-
     try {
-      // Parse deep link: faceapp://match?path=/storage/emulated/0/DCIM/photo.jpg
-      const urlObj = new URL(url);
-      if (urlObj.protocol === 'faceapp:' && urlObj.pathname === '//match') {
-        const imagePath = urlObj.searchParams.get('path');
+      console.log('Processing deep link:', url);
+      
+      if (url.startsWith('faceapp://match')) {
+        const urlParams = new URL(url);
+        const imagePath = urlParams.searchParams.get('path');
+        
         if (imagePath) {
-          await performFaceMatch(imagePath);
+          setIsProcessing(true);
+          const result = await FaceRecognitionService.matchFace(imagePath);
+          setLastResult(result);
+          setIsProcessing(false);
+          
+          Alert.alert(
+            'Face Match Result',
+            result.match === 'yes' 
+              ? `Match found: ${result.filename} (${result.confidence})`
+              : 'No match found',
+            [{ text: 'OK' }]
+          );
         }
       }
     } catch (error) {
-      console.error('Error processing deep link:', error);
-    }
-  };
-
-  const performFaceMatch = async (imagePath) => {
-    setIsProcessing(true);
-    try {
-      const result = await FaceRecognitionService.matchFace(imagePath);
-      setLastResult(result);
-      
-      // Send result back to calling app (simplified)
-      console.log('Face match result:', result);
-      
-    } catch (error) {
-      console.error('Face matching error:', error);
-      setLastResult({ match: 'no', error: error.message });
-    } finally {
       setIsProcessing(false);
+      console.error('Deep link processing error:', error);
+      Alert.alert('Error', 'Failed to process face recognition request');
     }
-  };
-
-  const testFaceMatch = async () => {
-    // For testing purposes - you would replace this with actual image path
-    const testImagePath = '/storage/emulated/0/DCIM/test_image.jpg';
-    await performFaceMatch(testImagePath);
   };
 
   const reloadDatabase = async () => {
     try {
       const count = await FaceRecognitionService.loadFaceDatabase();
       setFaceDbCount(count);
-      Alert.alert('Success', `Loaded ${count} face images from database`);
+      Alert.alert('Database Reloaded', `Loaded ${count} face images`);
     } catch (error) {
-      Alert.alert('Error', `Failed to reload database: ${error.message}`);
+      Alert.alert('Error', 'Failed to reload database');
     }
   };
+
+  const testFaceMatch = async () => {
+    try {
+      setIsProcessing(true);
+      // Test with a simulated path for demo
+      const testPath = '/storage/emulated/0/FaceDB/test.jpg';
+      const result = await FaceRecognitionService.matchFace(testPath);
+      setLastResult(result);
+      setIsProcessing(false);
+      
+      Alert.alert(
+        'Test Result',
+        result.match === 'yes' 
+          ? `Match: ${result.filename} (${result.confidence})`
+          : result.error || 'No match found'
+      );
+    } catch (error) {
+      setIsProcessing(false);
+      Alert.alert('Test Error', error.message);
+    }
+  };
+
+  if (Platform.OS !== 'android') {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Android Only</Text>
+        <Text style={styles.info}>This app only works on Android devices.</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -141,7 +177,7 @@ export default function App() {
       <View style={styles.header}>
         <Text style={styles.title}>Face Recognition Service</Text>
         <Text style={styles.subtitle}>
-          {isInitialized ? '✅ Ready' : '⏳ Initializing...'}
+          {isInitialized ? '✅ Ready for Android' : '⏳ Initializing...'}
         </Text>
       </View>
 
@@ -150,6 +186,9 @@ export default function App() {
           <Text style={styles.sectionTitle}>Database Status</Text>
           <Text style={styles.info}>
             Face Images Loaded: {faceDbCount}
+          </Text>
+          <Text style={styles.info}>
+            Path: /storage/emulated/0/FaceDB/
           </Text>
           <TouchableOpacity style={styles.button} onPress={reloadDatabase}>
             <Text style={styles.buttonText}>Reload Database</Text>
@@ -175,21 +214,25 @@ export default function App() {
         {lastResult && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Last Result</Text>
-            <View style={styles.resultBox}>
-              <Text style={styles.resultText}>
-                {JSON.stringify(lastResult, null, 2)}
-              </Text>
-            </View>
+            <Text style={styles.result}>
+              {JSON.stringify(lastResult, null, 2)}
+            </Text>
           </View>
         )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Setup Instructions</Text>
-          <Text style={styles.instructions}>
+          <Text style={styles.info}>
             1. Create folder: /storage/emulated/0/FaceDB/
-            {'\n'}2. Add face images to the folder
-            {'\n'}3. Restart app to load database
-            {'\n'}4. Use deep link: faceapp://match?path=IMAGE_PATH
+          </Text>
+          <Text style={styles.info}>
+            2. Add face images (jpg, png, etc.)
+          </Text>
+          <Text style={styles.info}>
+            3. Tap "Reload Database"
+          </Text>
+          <Text style={styles.info}>
+            4. Test with other apps using deep links
           </Text>
         </View>
       </ScrollView>
@@ -202,6 +245,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
     backgroundColor: '#2196F3',
     padding: 20,
@@ -212,12 +259,12 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 5,
+    textAlign: 'center',
   },
   subtitle: {
     fontSize: 16,
     color: 'white',
-    opacity: 0.9,
+    marginTop: 5,
   },
   content: {
     flex: 1,
@@ -225,14 +272,10 @@ const styles = StyleSheet.create({
   },
   section: {
     backgroundColor: 'white',
-    borderRadius: 8,
     padding: 15,
     marginBottom: 15,
+    borderRadius: 8,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
   },
   sectionTitle: {
     fontSize: 18,
@@ -241,19 +284,19 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   info: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   button: {
     backgroundColor: '#2196F3',
     padding: 12,
     borderRadius: 6,
-    alignItems: 'center',
+    marginTop: 10,
   },
   buttonText: {
     color: 'white',
-    fontSize: 16,
+    textAlign: 'center',
     fontWeight: 'bold',
   },
   processing: {
@@ -262,21 +305,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
   },
-  resultBox: {
-    backgroundColor: '#f8f8f8',
+  result: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+    backgroundColor: '#f0f0f0',
     padding: 10,
     borderRadius: 4,
-    borderLeftWidth: 4,
-    borderLeftColor: '#4CAF50',
   },
-  resultText: {
-    fontFamily: 'monospace',
-    fontSize: 14,
-    color: '#333',
-  },
-  instructions: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
+  errorText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#f44336',
+    marginBottom: 10,
   },
 });
