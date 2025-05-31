@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   StyleSheet, 
   Text, 
@@ -34,43 +34,126 @@ export default function App() {
   const [testImage, setTestImage] = useState(null);
   const [newFaceName, setNewFaceName] = useState('');
 
+  const initializeApp = useCallback(async () => {
+    try {
+      console.log('🔥 AGGRESSIVE LOG: Starting app initialization...');
+      console.log('🔥 Platform:', Platform.OS);
+      console.log('🔥 Current isInitialized state:', isInitialized);
+      
+      console.log('🔥 Calling FaceRecognitionService.initialize()...');
+      await FaceRecognitionService.initialize();
+      console.log('🔥 ✅ Face Recognition Service initialized successfully');
+      
+      console.log('🔥 Loading face database...');
+      const count = await FaceRecognitionService.loadFaceDatabase();
+      console.log('🔥 ✅ Database loaded with', count, 'faces');
+      setFaceDbCount(count);
+      
+      console.log('🔥 Loading face database images...');
+      await loadFaceDbImages();
+      console.log('🔥 ✅ Face database images loaded');
+      
+      console.log('🔥 Setting isInitialized to true...');
+      setIsInitialized(true);
+      console.log('🔥 ✅ App initialization complete');
+    } catch (error) {
+      console.error('🔥 ❌ Failed to initialize app:', error);
+      console.error('🔥 ❌ Error message:', error.message);
+      console.error('🔥 ❌ Error stack:', error.stack);
+      setIsInitialized(false);
+      Alert.alert('Initialization Error', error.message);
+    }
+  }, []);
+
+  const loadFaceDbImages = useCallback(async () => {
+    try {
+      console.log('🔥 Loading face database images...');
+      const images = await FaceRecognitionService.getFaceDbImages();
+      console.log('🔥 Loaded images count:', images.length);
+      console.log('🔥 Loaded images filenames:', images.map(img => img.filename));
+      setFaceDbImages(images);
+    } catch (error) {
+      console.error('🔥 ❌ Failed to load face database images:', error);
+    }
+  }, []);
+
+  const setupDeepLinkHandler = useCallback(() => {
+    console.log('🔥 Setting up deep link handler...');
+    Linking.addEventListener('url', handleDeepLinkEvent);
+    handleDeepLink(); // Handle initial URL if app was opened via deep link
+    console.log('🔥 ✅ Deep link handler setup complete');
+  }, []);
+
+  const handleDeepLink = useCallback(async () => {
+    try {
+      console.log('🔥 Handling deep link...');
+      const initialUrl = await Linking.getInitialURL();
+      console.log('🔥 Initial URL:', initialUrl);
+      if (initialUrl) {
+        processDeepLink(initialUrl);
+      }
+    } catch (error) {
+      console.error('🔥 ❌ Error handling initial URL:', error);
+    }
+  }, []);
+
   useEffect(() => {
+    console.log('🔥 useEffect triggered');
+    console.log('🔥 Current Platform.OS:', Platform.OS);
+    
     const setupApp = async () => {
+      console.log('🔥 Starting setupApp function...');
+      
       if (Platform.OS === 'android' || Platform.OS === 'web') {
+        console.log('🔥 Platform supported, continuing setup...');
+        
         if (Platform.OS === 'android') {
+          console.log('🔥 Requesting Android permissions...');
           await requestPermissions();
+          console.log('🔥 ✅ Android permissions completed');
         }
         
         // Add timeout to prevent infinite initialization
+        console.log('🔥 Setting up initialization timeout...');
         const initTimeout = setTimeout(() => {
-          console.error('Initialization timeout - forcing completion');
+          console.error('🔥 ❌ Initialization timeout - forcing completion');
           setIsInitialized(true);
-        }, 10000); // 10 second timeout
+        }, 15000); // 15 second timeout
         
         try {
+          console.log('🔥 Calling initializeApp...');
           await initializeApp();
+          console.log('🔥 ✅ initializeApp completed successfully');
           clearTimeout(initTimeout);
         } catch (error) {
+          console.error('🔥 ❌ Setup error:', error);
           clearTimeout(initTimeout);
-          console.error('Setup error:', error);
         }
         
+        console.log('🔥 Setting up deep link handler...');
         setupDeepLinkHandler();
       } else {
+        console.log('🔥 ❌ Platform not supported:', Platform.OS);
         Alert.alert('Platform Not Supported', 'This app works on Android devices and web demo.');
       }
     };
 
     const handleAppStateChange = (nextAppState) => {
+      console.log('🔥 App state changed to:', nextAppState);
       if (nextAppState === 'active') {
         handleDeepLink();
       }
     };
 
+    console.log('🔥 Calling setupApp...');
     setupApp();
 
+    console.log('🔥 Setting up AppState listener...');
     const subscription = AppState.addEventListener('change', handleAppStateChange);
-    return () => subscription?.remove();
+    return () => {
+      console.log('🔥 Cleaning up AppState listener...');
+      subscription?.remove();
+    };
   }, [initializeApp, setupDeepLinkHandler, handleDeepLink]);
 
   const requestPermissions = async () => {
@@ -107,55 +190,11 @@ export default function App() {
     }
   };
 
-  const initializeApp = async () => {
-    try {
-      console.log('Starting app initialization...');
-      await FaceRecognitionService.initialize();
-      console.log('Face Recognition Service initialized, loading database...');
-      const count = await FaceRecognitionService.loadFaceDatabase();
-      console.log('Database loaded with', count, 'faces');
-      setFaceDbCount(count);
-      console.log('Loading face database images...');
-      await loadFaceDbImages();
-      console.log('App initialization complete, setting isInitialized to true');
-      setIsInitialized(true);
-    } catch (error) {
-      console.error('Failed to initialize app:', error);
-      setIsInitialized(false); // Ensure we set this to false on error
-      Alert.alert('Initialization Error', error.message);
-    }
-  };
-
-  const loadFaceDbImages = async () => {
-    try {
-      console.log('Loading face database images...');
-      const images = await FaceRecognitionService.getFaceDbImages();
-      console.log('Loaded images:', images.length, images.map(img => img.filename));
-      setFaceDbImages(images);
-    } catch (error) {
-      console.error('Failed to load face database images:', error);
-    }
-  };
-
-  const setupDeepLinkHandler = () => {
-    Linking.addEventListener('url', handleDeepLinkEvent);
-    handleDeepLink(); // Handle initial URL if app was opened via deep link
-  };
-
   const handleDeepLinkEvent = (event) => {
+    console.log('🔥 Deep link event received:', event);
     if (event && event.url) {
+      console.log('🔥 Processing deep link URL:', event.url);
       processDeepLink(event.url);
-    }
-  };
-
-  const handleDeepLink = async () => {
-    try {
-      const initialUrl = await Linking.getInitialURL();
-      if (initialUrl) {
-        processDeepLink(initialUrl);
-      }
-    } catch (error) {
-      console.error('Error handling initial URL:', error);
     }
   };
 
@@ -191,16 +230,18 @@ export default function App() {
 
   const reloadDatabase = async () => {
     try {
-      console.log('Reloading face database...');
+      console.log('🔥 Reloading face database...');
       const count = await FaceRecognitionService.loadFaceDatabase();
-      console.log('Database loaded with', count, 'faces');
+      console.log('🔥 Database loaded with', count, 'faces');
       setFaceDbCount(count);
       
+      console.log('🔥 Reloading face database images...');
       await loadFaceDbImages();
+      console.log('🔥 ✅ Database reload complete');
       
       Alert.alert('Database Reloaded', `Loaded ${count} face images`);
     } catch (error) {
-      console.error('Error reloading database:', error);
+      console.error('🔥 ❌ Error reloading database:', error);
       Alert.alert('Error', `Failed to reload database: ${error.message}`);
     }
   };
@@ -230,14 +271,14 @@ export default function App() {
 
   const addFaceToDatabase = async () => {
     try {
-      console.log('Starting image picker...');
+      console.log('🔥 Starting image picker...');
       const imageUri = await pickImageFromGallery();
       if (!imageUri) {
-        console.log('No image selected');
+        console.log('🔥 No image selected');
         return;
       }
 
-      console.log('Selected image URI:', imageUri);
+      console.log('🔥 Selected image URI:', imageUri);
 
       // Use a more robust approach with default name and confirmation
       console.log('Showing name prompt for image:', imageUri);
@@ -256,37 +297,44 @@ export default function App() {
           {
             text: 'Add',
             onPress: async (name) => {
-              console.log('User entered name:', name);
+              console.log('🔥 User entered name:', name);
               
               // Use default name if none provided
               const faceName = (name && name.trim()) ? name.trim() : `Face_${Date.now()}`;
-              console.log('Using face name:', faceName);
+              console.log('🔥 Using face name:', faceName);
               
               try {
                 // Always ensure service is properly initialized
-                console.log('Ensuring service is initialized...');
+                console.log('🔥 Ensuring service is initialized...');
                 await FaceRecognitionService.initialize();
+                console.log('🔥 ✅ Service initialization confirmed');
                 
                 const filename = `${faceName.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
-                console.log('Adding face to database:', filename, 'from', imageUri);
+                console.log('🔥 Adding face to database:', filename, 'from', imageUri);
                 
                 const actualFilename = await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
-                console.log('Face added successfully with filename:', actualFilename);
+                console.log('🔥 ✅ Face added successfully with filename:', actualFilename);
                 
                 // Wait a moment for file system to sync
+                console.log('🔥 Waiting for file system sync...');
                 await new Promise(resolve => setTimeout(resolve, 1500));
+                console.log('🔥 ✅ File system sync wait complete');
                 
                 // Reload the database and update state
-                console.log('Reloading database...');
+                console.log('🔥 Reloading database after adding face...');
                 const count = await FaceRecognitionService.loadFaceDatabase();
-                console.log('Database loaded with', count, 'faces');
+                console.log('🔥 ✅ Database loaded with', count, 'faces');
                 setFaceDbCount(count);
                 
+                console.log('🔥 Reloading face database images after adding...');
                 await loadFaceDbImages();
+                console.log('🔥 ✅ Face database images reloaded');
                 
                 Alert.alert('Success', `Face added to database as ${actualFilename}. Database now has ${count} faces.`);
               } catch (error) {
-                console.error('Error adding face to database:', error);
+                console.error('🔥 ❌ Error adding face to database:', error);
+                console.error('🔥 ❌ Error details:', error.message);
+                console.error('🔥 ❌ Error stack:', error.stack);
                 Alert.alert('Error', `Failed to add face to database: ${error.message}`);
               }
             }
