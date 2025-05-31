@@ -188,7 +188,7 @@ export default function App() {
   const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaType.Images,
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
@@ -229,8 +229,12 @@ export default function App() {
                   const filename = `${name.trim().replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
                   console.log('Adding face to database:', filename, 'from', imageUri);
                   
+                  console.log('Adding face to database with filename:', filename);
                   await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
                   console.log('Face added successfully');
+                  
+                  // Wait a moment for file system to sync
+                  await new Promise(resolve => setTimeout(resolve, 500));
                   
                   Alert.alert('Success', `Face added to database as ${filename}`);
                   

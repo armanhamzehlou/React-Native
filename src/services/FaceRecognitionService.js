@@ -145,9 +145,13 @@ class FaceRecognitionService {
         return true;
       }
 
+      console.log('Adding image from:', sourceUri, 'to FaceDB');
+      console.log('FaceDB path:', this.faceDbPath);
+
       // Ensure FaceDB directory exists
       const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
       if (!dirInfo.exists) {
+        console.log('Creating FaceDB directory...');
         await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
       }
 
@@ -157,13 +161,34 @@ class FaceRecognitionService {
         filename = `face_${timestamp}.jpg`;
       }
 
+      // Ensure filename has proper extension
+      if (!filename.match(/\.(jpg|jpeg|png|bmp)$/i)) {
+        filename += '.jpg';
+      }
+
       const targetUri = `${this.faceDbPath}${filename}`;
+      console.log('Target URI:', targetUri);
       
+      // Check if source file exists and get info
+      const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
+      if (!sourceInfo.exists) {
+        throw new Error(`Source image not found: ${sourceUri}`);
+      }
+      console.log('Source image size:', sourceInfo.size, 'bytes');
+
       // Copy image to FaceDB directory
+      console.log('Copying image...');
       await FileSystem.copyAsync({
         from: sourceUri,
         to: targetUri
       });
+
+      // Verify the copy was successful
+      const copiedInfo = await FileSystem.getInfoAsync(targetUri);
+      if (!copiedInfo.exists) {
+        throw new Error('Failed to copy image to face database');
+      }
+      console.log('Successfully copied image. Size:', copiedInfo.size, 'bytes');
 
       console.log(`Added image to face database: ${filename}`);
       
@@ -173,6 +198,7 @@ class FaceRecognitionService {
       return true;
     } catch (error) {
       console.error('Failed to add image to face database:', error);
+      console.error('Error details:', error.message);
       throw error;
     }
   }
