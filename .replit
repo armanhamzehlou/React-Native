@@ -7,3 +7,19 @@ channel = "stable-23_11"
 
 [unitTest]
 language = "nodejs"
+
+[workflows]
+runButton = "Start React Native"
+
+[[workflows.workflow]]
+name = "Start React Native"
+author = 9465246
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm install"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm start"
