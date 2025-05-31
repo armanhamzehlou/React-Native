@@ -222,6 +222,34 @@ export default function App() {
             <Text style={styles.result}>
               {JSON.stringify(lastResult, null, 2)}
             </Text>
+            {lastResult.confidence && (
+              <View style={styles.confidenceSection}>
+                <Text style={styles.confidenceLabel}>
+                  Confidence Level: {(parseFloat(lastResult.confidence) * 100).toFixed(1)}%
+                </Text>
+                <View style={styles.confidenceBar}>
+                  <View 
+                    style={[
+                      styles.confidenceBarFill, 
+                      { 
+                        width: `${parseFloat(lastResult.confidence) * 100}%`,
+                        backgroundColor: parseFloat(lastResult.confidence) >= 0.90 
+                          ? '#4CAF50' 
+                          : parseFloat(lastResult.confidence) >= 0.75 
+                            ? '#FF9800' 
+                            : '#f44336'
+                      }
+                    ]} 
+                  />
+                </View>
+                {parseFloat(lastResult.confidence) >= 0.90 && (
+                  <Text style={styles.highConfidence}>✅ High Confidence Match</Text>
+                )}
+                {parseFloat(lastResult.confidence) >= 0.75 && parseFloat(lastResult.confidence) < 0.90 && (
+                  <Text style={styles.mediumConfidence}>⚠️ Medium Confidence - Manual Verification Recommended</Text>
+                )}
+              </View>
+            )}
           </View>
         )}
 
@@ -322,5 +350,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#f44336',
     marginBottom: 10,
+  },
+  confidenceSection: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 6,
+  },
+  confidenceLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    color: '#333',
+  },
+  confidenceBar: {
+    height: 8,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    overflow: 'hidden',
+    marginBottom: 8,
+  },
+  confidenceBarFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  highConfidence: {
+    color: '#4CAF50',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  mediumConfidence: {
+    color: '#FF9800',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
