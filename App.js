@@ -219,49 +219,61 @@ export default function App() {
 
       console.log('Selected image URI:', imageUri);
 
+      // Use a more robust approach with default name and confirmation
+      console.log('Showing name prompt for image:', imageUri);
+      
       Alert.prompt(
         'Add Face to Database',
         'Enter a name for this face:',
         [
-          { text: 'Cancel', style: 'cancel' },
+          { 
+            text: 'Cancel', 
+            style: 'cancel',
+            onPress: () => {
+              console.log('User cancelled adding face to database');
+            }
+          },
           {
             text: 'Add',
             onPress: async (name) => {
-              if (name && name.trim()) {
-                try {
-                  // Always ensure service is properly initialized
-                  console.log('Ensuring service is initialized...');
-                  await FaceRecognitionService.initialize();
-                  
-                  const filename = `${name.trim().replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
-                  console.log('Adding face to database:', filename, 'from', imageUri);
-                  
-                  const actualFilename = await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
-                  console.log('Face added successfully with filename:', actualFilename);
-                  
-                  // Wait a moment for file system to sync
-                  await new Promise(resolve => setTimeout(resolve, 1500));
-                  
-                  // Reload the database and update state
-                  console.log('Reloading database...');
-                  const count = await FaceRecognitionService.loadFaceDatabase();
-                  console.log('Database loaded with', count, 'faces');
-                  setFaceDbCount(count);
-                  
-                  await loadFaceDbImages();
-                  
-                  Alert.alert('Success', `Face added to database as ${actualFilename}. Database now has ${count} faces.`);
-                } catch (error) {
-                  console.error('Error adding face to database:', error);
-                  Alert.alert('Error', `Failed to add face to database: ${error.message}`);
-                }
-              } else {
-                console.log('No name provided');
+              console.log('User entered name:', name);
+              
+              // Use default name if none provided
+              const faceName = (name && name.trim()) ? name.trim() : `Face_${Date.now()}`;
+              console.log('Using face name:', faceName);
+              
+              try {
+                // Always ensure service is properly initialized
+                console.log('Ensuring service is initialized...');
+                await FaceRecognitionService.initialize();
+                
+                const filename = `${faceName.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+                console.log('Adding face to database:', filename, 'from', imageUri);
+                
+                const actualFilename = await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
+                console.log('Face added successfully with filename:', actualFilename);
+                
+                // Wait a moment for file system to sync
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Reload the database and update state
+                console.log('Reloading database...');
+                const count = await FaceRecognitionService.loadFaceDatabase();
+                console.log('Database loaded with', count, 'faces');
+                setFaceDbCount(count);
+                
+                await loadFaceDbImages();
+                
+                Alert.alert('Success', `Face added to database as ${actualFilename}. Database now has ${count} faces.`);
+              } catch (error) {
+                console.error('Error adding face to database:', error);
+                Alert.alert('Error', `Failed to add face to database: ${error.message}`);
               }
             }
           }
         ],
-        'plain-text'
+        'plain-text',
+        `Face_${Date.now()}` // Default value
       );
     } catch (error) {
       console.error('Error in addFaceToDatabase:', error);

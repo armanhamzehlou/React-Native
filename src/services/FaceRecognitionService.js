@@ -162,6 +162,8 @@ class FaceRecognitionService {
   }
 
   async addImageToFaceDb(sourceUri, filename) {
+    console.log('🟡 addImageToFaceDb called with:', { sourceUri, filename, platform: Platform.OS });
+    
     try {
       if (Platform.OS === 'web') {
         console.log('Web demo: Would add image to face database');
@@ -170,15 +172,15 @@ class FaceRecognitionService {
 
       // Ensure service is initialized
       if (!this.isInitialized) {
-        console.log('Service not initialized in addImageToFaceDb, initializing...');
+        console.log('🟠 Service not initialized in addImageToFaceDb, initializing...');
         await this.initialize();
         if (!this.isInitialized) {
           throw new Error('Face Recognition Service failed to initialize');
         }
       }
 
-      console.log('Adding image from:', sourceUri, 'to FaceDB');
-      console.log('FaceDB path:', this.faceDbPath);
+      console.log('🟢 Adding image from:', sourceUri, 'to FaceDB');
+      console.log('🟢 FaceDB path:', this.faceDbPath);
 
       // Ensure FaceDB directory exists
       const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
@@ -209,11 +211,14 @@ class FaceRecognitionService {
       console.log('Target URI:', targetUri);
       
       // Check if source file exists and get info
+      console.log('🔍 Checking source file:', sourceUri);
       const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
+      console.log('🔍 Source file info:', sourceInfo);
+      
       if (!sourceInfo.exists) {
         throw new Error(`Source image not found: ${sourceUri}`);
       }
-      console.log('Source image exists, size:', sourceInfo.size, 'bytes');
+      console.log('✅ Source image exists, size:', sourceInfo.size, 'bytes');
 
       // Check if target already exists
       const targetExists = await FileSystem.getInfoAsync(targetUri);
@@ -228,41 +233,61 @@ class FaceRecognitionService {
         console.log('New target URI:', newTargetUri);
         
         // Copy image to FaceDB directory with new name
-        console.log('Copying image with unique name...');
+        console.log('📁 Copying image with unique name from', sourceUri, 'to', newTargetUri);
         await FileSystem.copyAsync({
           from: sourceUri,
           to: newTargetUri
         });
+        console.log('📁 Copy operation completed');
 
         // Verify the copy was successful
         const copiedInfo = await FileSystem.getInfoAsync(newTargetUri);
+        console.log('📁 Copied file info:', copiedInfo);
+        
         if (!copiedInfo.exists) {
           throw new Error('Failed to copy image to face database');
         }
-        console.log('Successfully copied image. Size:', copiedInfo.size, 'bytes');
+        console.log('✅ Successfully copied image. Size:', copiedInfo.size, 'bytes');
       } else {
         // Copy image to FaceDB directory
-        console.log('Copying image...');
+        console.log('📁 Copying image from', sourceUri, 'to', targetUri);
         await FileSystem.copyAsync({
           from: sourceUri,
           to: targetUri
         });
+        console.log('📁 Copy operation completed');
 
         // Verify the copy was successful
         const copiedInfo = await FileSystem.getInfoAsync(targetUri);
+        console.log('📁 Copied file info:', copiedInfo);
+        
         if (!copiedInfo.exists) {
           throw new Error('Failed to copy image to face database');
         }
-        console.log('Successfully copied image. Size:', copiedInfo.size, 'bytes');
+        console.log('✅ Successfully copied image. Size:', copiedInfo.size, 'bytes');
       }
 
-      console.log(`Added image to face database: ${filename}`);
+      console.log(`🎉 Added image to face database: ${filename}`);
       
       // Add a small delay to ensure file system sync
-      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('⏳ Waiting for file system sync...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Verify the file is still there after sync
+      const finalTargetUri = targetExists.exists ? `${this.faceDbPath}${filename}` : targetUri;
+      const finalCheck = await FileSystem.getInfoAsync(finalTargetUri);
+      console.log('🔍 Final file check:', finalCheck);
+      
+      if (!finalCheck.exists) {
+        throw new Error('Image was copied but disappeared after file system sync');
+      }
+      
+      // List all files in directory to confirm
+      const allFiles = await FileSystem.readDirectoryAsync(this.faceDbPath);
+      console.log('📋 All files in FaceDB after adding:', allFiles);
       
       // Reload face database to include new image
-      console.log('Reloading face database...');
+      console.log('🔄 Reloading face database...');
       await this.loadFaceDatabase();
       
       return filename; // Return the actual filename used
