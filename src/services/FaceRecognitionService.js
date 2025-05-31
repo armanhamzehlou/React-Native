@@ -15,28 +15,52 @@ class FaceRecognitionService {
     if (this.isInitialized) return;
 
     try {
+      console.log('Initializing Face Recognition Service for', Platform.OS);
+
       if (Platform.OS === 'web') {
         console.log('Web environment detected - running in demo mode');
         console.log('TensorFlow.js and face-api.js would be loaded here in production');
-      } else if (Platform.OS !== 'android') {
-        throw new Error('This service only supports Android and web demo');
+        this.isInitialized = true;
+        console.log('Face Recognition Service initialized');
+        return;
       }
 
-      console.log('Initializing Face Recognition Service for', Platform.OS);
+      // For mobile platforms (Android/iOS)
+      if (Platform.OS === 'android' || Platform.OS === 'ios') {
+        // Ensure FileSystem is available
+        if (!FileSystem) {
+          throw new Error('FileSystem not available');
+        }
 
-      // Create FaceDB directory if it doesn't exist
-      if (Platform.OS !== 'web') {
+        console.log('Creating FaceDB directory at:', this.faceDbPath);
+        
+        // Create FaceDB directory if it doesn't exist
         const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
+        console.log('Directory check result:', dirInfo);
+        
         if (!dirInfo.exists) {
           await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
           console.log('Created FaceDB directory:', this.faceDbPath);
+          
+          // Verify directory was created
+          const verifyInfo = await FileSystem.getInfoAsync(this.faceDbPath);
+          if (!verifyInfo.exists) {
+            throw new Error('Failed to create FaceDB directory');
+          }
+          console.log('Verified FaceDB directory exists');
+        } else {
+          console.log('FaceDB directory already exists');
         }
-      }
 
-      this.isInitialized = true;
-      console.log('Face Recognition Service initialized');
+        this.isInitialized = true;
+        console.log('Face Recognition Service initialized successfully');
+      } else {
+        throw new Error(`Platform ${Platform.OS} not supported`);
+      }
     } catch (error) {
       console.error('Failed to initialize Face Recognition Service:', error);
+      console.error('Error details:', error.message);
+      this.isInitialized = false;
       throw error;
     }
   }
@@ -145,6 +169,10 @@ class FaceRecognitionService {
         return true;
       }
 
+      if (!this.isInitialized) {
+        throw new Error('Face Recognition Service not initialized. Call initialize() first.');
+      }
+
       console.log('Adding image from:', sourceUri, 'to FaceDB');
       console.log('FaceDB path:', this.faceDbPath);
 
@@ -153,12 +181,19 @@ class FaceRecognitionService {
       if (!dirInfo.exists) {
         console.log('Creating FaceDB directory...');
         await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
+        
+        // Double-check directory creation
+        const verifyDir = await FileSystem.getInfoAsync(this.faceDbPath);
+        if (!verifyDir.exists) {
+          throw new Error('Failed to create FaceDB directory');
+        }
       }
 
       // Generate unique filename if not provided
       if (!filename) {
         const timestamp = Date.now();
-        filename = `face_${timestamp}.jpg`;
+        const random = Math.floor(Math.random() * 1000);
+        filename = `face_${timestamp}_${random}.jpg`;
       }
 
       // Ensure filename has proper extension
@@ -174,31 +209,63 @@ class FaceRecognitionService {
       if (!sourceInfo.exists) {
         throw new Error(`Source image not found: ${sourceUri}`);
       }
-      console.log('Source image size:', sourceInfo.size, 'bytes');
+      console.log('Source image exists, size:', sourceInfo.size, 'bytes');
 
-      // Copy image to FaceDB directory
-      console.log('Copying image...');
-      await FileSystem.copyAsync({
-        from: sourceUri,
-        to: targetUri
-      });
+      // Check if target already exists
+      const targetExists = await FileSystem.getInfoAsync(targetUri);
+      if (targetExists.exists) {
+        console.log('Target file already exists, generating new name...');
+        const timestamp = Date.now();
+        const random = Math.floor(Math.random() * 1000);
+        const baseName = filename.replace(/\.[^/.]+$/, "");
+        const extension = filename.split('.').pop();
+        filename = `${baseName}_${timestamp}_${random}.${extension}`;
+        const newTargetUri = `${this.faceDbPath}${filename}`;
+        console.log('New target URI:', newTargetUri);
+        
+        // Copy image to FaceDB directory with new name
+        console.log('Copying image with unique name...');
+        await FileSystem.copyAsync({
+          from: sourceUri,
+          to: newTargetUri
+        });
 
-      // Verify the copy was successful
-      const copiedInfo = await FileSystem.getInfoAsync(targetUri);
-      if (!copiedInfo.exists) {
-        throw new Error('Failed to copy image to face database');
+        // Verify the copy was successful
+        const copiedInfo = await FileSystem.getInfoAsync(newTargetUri);
+        if (!copiedInfo.exists) {
+          throw new Error('Failed to copy image to face database');
+        }
+        console.log('Successfully copied image. Size:', copiedInfo.size, 'bytes');
+      } else {
+        // Copy image to FaceDB directory
+        console.log('Copying image...');
+        await FileSystem.copyAsync({
+          from: sourceUri,
+          to: targetUri
+        });
+
+        // Verify the copy was successful
+        const copiedInfo = await FileSystem.getInfoAsync(targetUri);
+        if (!copiedInfo.exists) {
+          throw new Error('Failed to copy image to face database');
+        }
+        console.log('Successfully copied image. Size:', copiedInfo.size, 'bytes');
       }
-      console.log('Successfully copied image. Size:', copiedInfo.size, 'bytes');
 
       console.log(`Added image to face database: ${filename}`);
       
+      // Add a small delay to ensure file system sync
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Reload face database to include new image
+      console.log('Reloading face database...');
       await this.loadFaceDatabase();
       
-      return true;
+      return filename; // Return the actual filename used
     } catch (error) {
       console.error('Failed to add image to face database:', error);
       console.error('Error details:', error.message);
+      console.error('Stack trace:', error.stack);
       throw error;
     }
   }
@@ -383,7 +450,11 @@ class FaceRecognitionService {
   async matchFace(imagePath) {
     try {
       if (!this.isInitialized) {
-        throw new Error('Face Recognition Service not initialized');
+        console.error('Face Recognition Service not initialized - calling initialize()');
+        await this.initialize();
+        if (!this.isInitialized) {
+          throw new Error('Face Recognition Service failed to initialize');
+        }
       }
 
       console.log(`Matching face from: ${imagePath}`);

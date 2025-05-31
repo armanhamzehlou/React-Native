@@ -188,19 +188,22 @@ export default function App() {
   const pickImageFromGallery = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ['images'],
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        allowsMultipleSelection: false,
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets && result.assets[0]) {
+        console.log('Image selected:', result.assets[0].uri);
         return result.assets[0].uri;
       }
+      console.log('No image selected or selection was canceled');
       return null;
     } catch (error) {
       console.error('Image picker error:', error);
-      Alert.alert('Error', 'Failed to pick image from gallery');
+      Alert.alert('Error', `Failed to pick image from gallery: ${error.message}`);
       return null;
     }
   };
@@ -226,17 +229,22 @@ export default function App() {
             onPress: async (name) => {
               if (name && name.trim()) {
                 try {
+                  // Ensure service is initialized
+                  if (!isInitialized) {
+                    console.log('Service not initialized, initializing now...');
+                    await initializeApp();
+                  }
+                  
                   const filename = `${name.trim().replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
                   console.log('Adding face to database:', filename, 'from', imageUri);
                   
-                  console.log('Adding face to database with filename:', filename);
-                  await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
-                  console.log('Face added successfully');
+                  const actualFilename = await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
+                  console.log('Face added successfully with filename:', actualFilename);
                   
                   // Wait a moment for file system to sync
-                  await new Promise(resolve => setTimeout(resolve, 500));
+                  await new Promise(resolve => setTimeout(resolve, 1000));
                   
-                  Alert.alert('Success', `Face added to database as ${filename}`);
+                  Alert.alert('Success', `Face added to database as ${actualFilename}`);
                   
                   console.log('Reloading database...');
                   await reloadDatabase();
