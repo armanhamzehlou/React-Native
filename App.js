@@ -229,11 +229,9 @@ export default function App() {
             onPress: async (name) => {
               if (name && name.trim()) {
                 try {
-                  // Ensure service is initialized
-                  if (!isInitialized) {
-                    console.log('Service not initialized, initializing now...');
-                    await initializeApp();
-                  }
+                  // Always ensure service is properly initialized
+                  console.log('Ensuring service is initialized...');
+                  await FaceRecognitionService.initialize();
                   
                   const filename = `${name.trim().replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
                   console.log('Adding face to database:', filename, 'from', imageUri);
@@ -242,12 +240,17 @@ export default function App() {
                   console.log('Face added successfully with filename:', actualFilename);
                   
                   // Wait a moment for file system to sync
-                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  await new Promise(resolve => setTimeout(resolve, 1500));
                   
-                  Alert.alert('Success', `Face added to database as ${actualFilename}`);
-                  
+                  // Reload the database and update state
                   console.log('Reloading database...');
-                  await reloadDatabase();
+                  const count = await FaceRecognitionService.loadFaceDatabase();
+                  console.log('Database loaded with', count, 'faces');
+                  setFaceDbCount(count);
+                  
+                  await loadFaceDbImages();
+                  
+                  Alert.alert('Success', `Face added to database as ${actualFilename}. Database now has ${count} faces.`);
                 } catch (error) {
                   console.error('Error adding face to database:', error);
                   Alert.alert('Error', `Failed to add face to database: ${error.message}`);

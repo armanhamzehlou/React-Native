@@ -12,8 +12,6 @@ class FaceRecognitionService {
   }
 
   async initialize() {
-    if (this.isInitialized) return;
-
     try {
       console.log('Initializing Face Recognition Service for', Platform.OS);
 
@@ -52,6 +50,7 @@ class FaceRecognitionService {
           console.log('FaceDB directory already exists');
         }
 
+        // Always set initialized to true after successful directory setup
         this.isInitialized = true;
         console.log('Face Recognition Service initialized successfully');
       } else {
@@ -169,8 +168,13 @@ class FaceRecognitionService {
         return true;
       }
 
+      // Ensure service is initialized
       if (!this.isInitialized) {
-        throw new Error('Face Recognition Service not initialized. Call initialize() first.');
+        console.log('Service not initialized in addImageToFaceDb, initializing...');
+        await this.initialize();
+        if (!this.isInitialized) {
+          throw new Error('Face Recognition Service failed to initialize');
+        }
       }
 
       console.log('Adding image from:', sourceUri, 'to FaceDB');
