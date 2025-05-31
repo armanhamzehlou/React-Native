@@ -274,7 +274,12 @@ export default function App() {
 
   const renderFaceDbItem = ({ item }) => (
     <View style={styles.faceItem}>
-      <Image source={{ uri: item.uri }} style={styles.faceImage} />
+      <Image 
+        source={{ uri: item.uri }} 
+        style={styles.faceImage}
+        onError={(error) => console.log('Image load error:', error)}
+        defaultSource={require('./assets/icon.png')}
+      />
       <Text style={styles.faceFilename} numberOfLines={2}>{item.filename}</Text>
       <TouchableOpacity 
         style={styles.removeButton}

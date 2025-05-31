@@ -9,7 +9,7 @@ channel = "stable-23_11"
 language = "nodejs"
 
 [workflows]
-runButton = "Start React Native App"
+runButton = "Start React Native"
 
 [[workflows.workflow]]
 name = "Start React Native"
@@ -32,32 +32,6 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node server.js"
-
-[[workflows.workflow]]
-name = "Start React Native App"
-author = 9465246
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm install"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npm run web"
-
-[[workflows.workflow]]
-name = "Build Android APK"
-author = 9465246
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx expo install"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "npx expo run:android"
 
 [[ports]]
 localPort = 8081

@@ -44,11 +44,47 @@ class FaceRecognitionService {
   async getFaceDbImages() {
     try {
       if (Platform.OS === 'web') {
-        // Return demo images for web
+        // Return demo images with proper preview images for web
         return [
-          { filename: 'demo_face_1.jpg', uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' },
-          { filename: 'demo_face_2.jpg', uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' },
-          { filename: 'demo_face_3.jpg', uri: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==' }
+          { 
+            filename: 'demo_face_1.jpg', 
+            uri: 'data:image/svg+xml;base64,' + btoa(`
+              <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                <rect width="120" height="120" fill="#4CAF50"/>
+                <circle cx="60" cy="45" r="15" fill="white"/>
+                <circle cx="45" cy="40" r="3" fill="#333"/>
+                <circle cx="75" cy="40" r="3" fill="#333"/>
+                <path d="M45 55 Q60 65 75 55" stroke="white" stroke-width="2" fill="none"/>
+                <text x="60" y="100" text-anchor="middle" fill="white" font-size="12">Person 1</text>
+              </svg>
+            `)
+          },
+          { 
+            filename: 'demo_face_2.jpg', 
+            uri: 'data:image/svg+xml;base64,' + btoa(`
+              <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                <rect width="120" height="120" fill="#2196F3"/>
+                <circle cx="60" cy="45" r="15" fill="white"/>
+                <circle cx="45" cy="40" r="3" fill="#333"/>
+                <circle cx="75" cy="40" r="3" fill="#333"/>
+                <path d="M45 55 Q60 65 75 55" stroke="white" stroke-width="2" fill="none"/>
+                <text x="60" y="100" text-anchor="middle" fill="white" font-size="12">Person 2</text>
+              </svg>
+            `)
+          },
+          { 
+            filename: 'demo_face_3.jpg', 
+            uri: 'data:image/svg+xml;base64,' + btoa(`
+              <svg width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+                <rect width="120" height="120" fill="#FF9800"/>
+                <circle cx="60" cy="45" r="15" fill="white"/>
+                <circle cx="45" cy="40" r="3" fill="#333"/>
+                <circle cx="75" cy="40" r="3" fill="#333"/>
+                <path d="M45 55 Q60 65 75 55" stroke="white" stroke-width="2" fill="none"/>
+                <text x="60" y="100" text-anchor="middle" fill="white" font-size="12">Person 3</text>
+              </svg>
+            `)
+          }
         ];
       }
 
