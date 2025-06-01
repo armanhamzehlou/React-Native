@@ -34,6 +34,18 @@ export default function App() {
   const [testImage, setTestImage] = useState(null);
   const [newFaceName, setNewFaceName] = useState('');
 
+  const loadFaceDbImages = useCallback(async () => {
+    try {
+      console.log('🔥 Loading face database images...');
+      const images = await FaceRecognitionService.getFaceDbImages();
+      console.log('🔥 Loaded images count:', images.length);
+      console.log('🔥 Loaded images filenames:', images.map(img => img.filename));
+      setFaceDbImages(images);
+    } catch (error) {
+      console.error('🔥 ❌ Failed to load face database images:', error);
+    }
+  }, []);
+
   const initializeApp = useCallback(async () => {
     try {
       console.log('🔥 AGGRESSIVE LOG: Starting app initialization...');
@@ -63,26 +75,7 @@ export default function App() {
       setIsInitialized(false);
       Alert.alert('Initialization Error', error.message);
     }
-  }, []);
-
-  const loadFaceDbImages = useCallback(async () => {
-    try {
-      console.log('🔥 Loading face database images...');
-      const images = await FaceRecognitionService.getFaceDbImages();
-      console.log('🔥 Loaded images count:', images.length);
-      console.log('🔥 Loaded images filenames:', images.map(img => img.filename));
-      setFaceDbImages(images);
-    } catch (error) {
-      console.error('🔥 ❌ Failed to load face database images:', error);
-    }
-  }, []);
-
-  const setupDeepLinkHandler = useCallback(() => {
-    console.log('🔥 Setting up deep link handler...');
-    Linking.addEventListener('url', handleDeepLinkEvent);
-    handleDeepLink(); // Handle initial URL if app was opened via deep link
-    console.log('🔥 ✅ Deep link handler setup complete');
-  }, []);
+  }, [loadFaceDbImages]);
 
   const handleDeepLink = useCallback(async () => {
     try {
@@ -97,9 +90,30 @@ export default function App() {
     }
   }, []);
 
+  const handleDeepLinkEvent = useCallback((event) => {
+    console.log('🔥 Deep link event received:', event);
+    if (event && event.url) {
+      console.log('🔥 Processing deep link URL:', event.url);
+      processDeepLink(event.url);
+    }
+  }, []);
+
+  const setupDeepLinkHandler = useCallback(() => {
+    console.log('🔥 Setting up deep link handler...');
+    Linking.addEventListener('url', handleDeepLinkEvent);
+    handleDeepLink(); // Handle initial URL if app was opened via deep link
+    console.log('🔥 ✅ Deep link handler setup complete');
+  }, [handleDeepLinkEvent, handleDeepLink]);
+
   useEffect(() => {
-    console.log('🔥 useEffect triggered');
+    console.log('🔥 useEffect triggered - isInitialized:', isInitialized);
     console.log('🔥 Current Platform.OS:', Platform.OS);
+    
+    // Prevent re-initialization if already initialized
+    if (isInitialized) {
+      console.log('🔥 Already initialized, skipping setup');
+      return;
+    }
     
     const setupApp = async () => {
       console.log('🔥 Starting setupApp function...');
@@ -128,6 +142,7 @@ export default function App() {
         } catch (error) {
           console.error('🔥 ❌ Setup error:', error);
           clearTimeout(initTimeout);
+          setIsInitialized(true); // Force initialization even on error
         }
         
         console.log('🔥 Setting up deep link handler...');
@@ -138,15 +153,19 @@ export default function App() {
       }
     };
 
+    console.log('🔥 Calling setupApp...');
+    setupApp();
+
+  }, [isInitialized, initializeApp, setupDeepLinkHandler]);
+
+  // Separate useEffect for app state changes to avoid initialization loops
+  useEffect(() => {
     const handleAppStateChange = (nextAppState) => {
       console.log('🔥 App state changed to:', nextAppState);
-      if (nextAppState === 'active') {
+      if (nextAppState === 'active' && isInitialized) {
         handleDeepLink();
       }
     };
-
-    console.log('🔥 Calling setupApp...');
-    setupApp();
 
     console.log('🔥 Setting up AppState listener...');
     const subscription = AppState.addEventListener('change', handleAppStateChange);
@@ -154,7 +173,7 @@ export default function App() {
       console.log('🔥 Cleaning up AppState listener...');
       subscription?.remove();
     };
-  }, [initializeApp, setupDeepLinkHandler, handleDeepLink]);
+  }, [isInitialized, handleDeepLink]);
 
   const requestPermissions = async () => {
     try {
@@ -190,13 +209,7 @@ export default function App() {
     }
   };
 
-  const handleDeepLinkEvent = (event) => {
-    console.log('🔥 Deep link event received:', event);
-    if (event && event.url) {
-      console.log('🔥 Processing deep link URL:', event.url);
-      processDeepLink(event.url);
-    }
-  };
+  
 
   const processDeepLink = async (url) => {
     try {
