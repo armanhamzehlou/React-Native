@@ -10,7 +10,6 @@ import {
   Linking,
   AppState,
   Platform,
-  PermissionsAndroid,
   Image,
   Modal,
   FlatList,
@@ -177,27 +176,33 @@ export default function App() {
 
   const requestPermissions = async () => {
     try {
-      const permissions = [
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-        PermissionsAndroid.PERMISSIONS.CAMERA,
-      ];
+      // Only request Android permissions on Android platform
+      if (Platform.OS === 'android') {
+        // Dynamic import to avoid web compatibility issues
+        const { PermissionsAndroid } = require('react-native');
+        
+        const permissions = [
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+        ];
 
-      const granted = await PermissionsAndroid.requestMultiple(permissions);
-      
-      const allGranted = Object.values(granted).every(
-        permission => permission === PermissionsAndroid.RESULTS.GRANTED
-      );
-
-      if (!allGranted) {
-        Alert.alert(
-          'Permissions Required',
-          'This app needs storage and camera permissions to work properly.',
-          [{ text: 'OK' }]
+        const granted = await PermissionsAndroid.requestMultiple(permissions);
+        
+        const allGranted = Object.values(granted).every(
+          permission => permission === PermissionsAndroid.RESULTS.GRANTED
         );
+
+        if (!allGranted) {
+          Alert.alert(
+            'Permissions Required',
+            'This app needs storage and camera permissions to work properly.',
+            [{ text: 'OK' }]
+          );
+        }
       }
 
-      // Request media library permissions for Expo
+      // Request media library permissions for Expo (non-web platforms)
       if (Platform.OS !== 'web') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
