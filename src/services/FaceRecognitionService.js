@@ -1,4 +1,3 @@
-
 import { NativeModules, Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 
@@ -31,15 +30,15 @@ class FaceRecognitionService {
         }
 
         console.log('Creating FaceDB directory at:', this.faceDbPath);
-        
+
         // Create FaceDB directory if it doesn't exist
         const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
         console.log('Directory check result:', dirInfo);
-        
+
         if (!dirInfo.exists) {
           await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
           console.log('Created FaceDB directory:', this.faceDbPath);
-          
+
           // Verify directory was created
           const verifyInfo = await FileSystem.getInfoAsync(this.faceDbPath);
           if (!verifyInfo.exists) {
@@ -82,7 +81,7 @@ class FaceRecognitionService {
 
       const files = await FileSystem.readDirectoryAsync(this.faceDbPath);
       console.log('Found files in FaceDB:', files);
-      
+
       const imageFiles = files.filter(file => 
         /\.(jpg|jpeg|png|bmp)$/i.test(file)
       );
@@ -91,21 +90,21 @@ class FaceRecognitionService {
       const images = await Promise.all(
         imageFiles.map(async (filename) => {
           const filePath = `${this.faceDbPath}${filename}`;
-          
+
           // For Android, convert to base64 for display
           try {
             const base64 = await FileSystem.readAsStringAsync(filePath, {
               encoding: FileSystem.EncodingType.Base64,
             });
-            
+
             // Detect image type from filename
             const extension = filename.toLowerCase().split('.').pop();
             let mimeType = 'image/jpeg';
             if (extension === 'png') mimeType = 'image/png';
             else if (extension === 'bmp') mimeType = 'image/bmp';
-            
+
             const uri = `data:${mimeType};base64,${base64}`;
-            
+
             return { filename, uri, filePath };
           } catch (error) {
             console.error(`Failed to read image ${filename}:`, error);
@@ -124,7 +123,7 @@ class FaceRecognitionService {
 
   async addImageToFaceDb(sourceUri, filename) {
     console.log('🟡 addImageToFaceDb called with:', { sourceUri, filename, platform: Platform.OS });
-    
+
     try {
       if (Platform.OS === 'web') {
         console.log('Web demo: Would add image to face database');
@@ -148,7 +147,7 @@ class FaceRecognitionService {
       if (!dirInfo.exists) {
         console.log('Creating FaceDB directory...');
         await FileSystem.makeDirectoryAsync(this.faceDbPath, { intermediates: true });
-        
+
         // Double-check directory creation
         const verifyDir = await FileSystem.getInfoAsync(this.faceDbPath);
         if (!verifyDir.exists) {
@@ -170,12 +169,12 @@ class FaceRecognitionService {
 
       const targetUri = `${this.faceDbPath}${filename}`;
       console.log('Target URI:', targetUri);
-      
+
       // Check if source file exists and get info
       console.log('🔍 Checking source file:', sourceUri);
       const sourceInfo = await FileSystem.getInfoAsync(sourceUri);
       console.log('🔍 Source file info:', sourceInfo);
-      
+
       if (!sourceInfo.exists) {
         throw new Error(`Source image not found: ${sourceUri}`);
       }
@@ -192,7 +191,7 @@ class FaceRecognitionService {
         filename = `${baseName}_${timestamp}_${random}.${extension}`;
         const newTargetUri = `${this.faceDbPath}${filename}`;
         console.log('New target URI:', newTargetUri);
-        
+
         // Copy image to FaceDB directory with new name
         console.log('📁 Copying image with unique name from', sourceUri, 'to', newTargetUri);
         await FileSystem.copyAsync({
@@ -204,53 +203,70 @@ class FaceRecognitionService {
         // Verify the copy was successful
         const copiedInfo = await FileSystem.getInfoAsync(newTargetUri);
         console.log('📁 Copied file info:', copiedInfo);
-        
+
         if (!copiedInfo.exists) {
           throw new Error('Failed to copy image to face database');
         }
         console.log('✅ Successfully copied image. Size:', copiedInfo.size, 'bytes');
       } else {
-        // Copy image to FaceDB directory
-        console.log('📁 Copying image from', sourceUri, 'to', targetUri);
-        await FileSystem.copyAsync({
-          from: sourceUri,
-          to: targetUri
-        });
-        console.log('📁 Copy operation completed');
+        // Copy image to FaceDB directory with aggressive error handling
+        console.log('📁 🚀 ATTEMPTING COPY: from', sourceUri, 'to', targetUri);
+
+        try {
+          await FileSystem.copyAsync({
+            from: sourceUri,
+            to: targetUri
+          });
+          console.log('📁 ✅ Copy operation completed successfully');
+        } catch (copyError) {
+          console.error('📁 ❌ Copy operation failed:', copyError);
+          console.error('📁 ❌ Copy error details:', copyError.message);
+          throw new Error(`Failed to copy image: ${copyError.message}`);
+        }
+
+        // Add delay for filesystem sync
+        console.log('📁 ⏳ Waiting for filesystem sync...');
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
         // Verify the copy was successful
+        console.log('📁 🔍 Verifying copied file...');
         const copiedInfo = await FileSystem.getInfoAsync(targetUri);
-        console.log('📁 Copied file info:', copiedInfo);
-        
+        console.log('📁 📊 Copied file info:', JSON.stringify(copiedInfo, null, 2));
+
         if (!copiedInfo.exists) {
-          throw new Error('Failed to copy image to face database');
+          throw new Error('Image copy verification failed - file does not exist');
         }
-        console.log('✅ Successfully copied image. Size:', copiedInfo.size, 'bytes');
+
+        if (copiedInfo.size === 0) {
+          throw new Error('Image copy verification failed - file is empty');
+        }
+
+        console.log('📁 ✅ Successfully copied and verified image. Size:', copiedInfo.size, 'bytes');
       }
 
       console.log(`🎉 Added image to face database: ${filename}`);
-      
+
       // Add a small delay to ensure file system sync
       console.log('⏳ Waiting for file system sync...');
       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
       // Verify the file is still there after sync
       const finalTargetUri = targetExists.exists ? `${this.faceDbPath}${filename}` : targetUri;
       const finalCheck = await FileSystem.getInfoAsync(finalTargetUri);
       console.log('🔍 Final file check:', finalCheck);
-      
+
       if (!finalCheck.exists) {
         throw new Error('Image was copied but disappeared after file system sync');
       }
-      
+
       // List all files in directory to confirm
       const allFiles = await FileSystem.readDirectoryAsync(this.faceDbPath);
       console.log('📋 All files in FaceDB after adding:', allFiles);
-      
+
       // Reload face database to include new image
       console.log('🔄 Reloading face database...');
       await this.loadFaceDatabase();
-      
+
       return filename; // Return the actual filename used
     } catch (error) {
       console.error('Failed to add image to face database:', error);
@@ -269,17 +285,17 @@ class FaceRecognitionService {
 
       const targetUri = `${this.faceDbPath}${filename}`;
       const fileInfo = await FileSystem.getInfoAsync(targetUri);
-      
+
       if (fileInfo.exists) {
         await FileSystem.deleteAsync(targetUri);
         console.log(`Removed image from face database: ${filename}`);
-        
+
         // Remove from in-memory database
         this.faceDatabase.delete(filename);
-        
+
         return true;
       }
-      
+
       return false;
     } catch (error) {
       console.error('Failed to remove image from face database:', error);
@@ -344,17 +360,17 @@ class FaceRecognitionService {
         // Generate a more sophisticated descriptor for web demo
         const descriptor = new Float32Array(128);
         let hash = imagePath.length;
-        
+
         // Add more complexity to the hash function for better simulation
         for (let i = 0; i < imagePath.length; i++) {
           hash = ((hash * 31) + imagePath.charCodeAt(i)) & 0x7fffffff;
         }
-        
+
         for (let i = 0; i < 128; i++) {
           hash = ((hash * 1103515245) + 12345) & 0x7fffffff;
           descriptor[i] = (hash / 0x7fffffff) * 2 - 1;
         }
-        
+
         return descriptor;
       }
 
@@ -378,7 +394,7 @@ class FaceRecognitionService {
 
       // Enhanced descriptor generation with multiple hash functions
       const descriptor = new Float32Array(128);
-      
+
       // Primary hash from image data
       let hash1 = fileInfo.size;
       let hash2 = imagePath.length;
@@ -389,7 +405,7 @@ class FaceRecognitionService {
       for (let chunk = 0; chunk < 32; chunk++) {
         const start = chunk * chunkSize;
         const end = Math.min(start + chunkSize, imageData.length);
-        
+
         for (let i = start; i < end; i++) {
           const char = imageData.charCodeAt(i);
           hash1 = ((hash1 << 5) - hash1 + char) & 0xffffffff;
@@ -418,7 +434,7 @@ class FaceRecognitionService {
         magnitude += descriptor[i] * descriptor[i];
       }
       magnitude = Math.sqrt(magnitude);
-      
+
       if (magnitude > 0) {
         for (let i = 0; i < 128; i++) {
           descriptor[i] /= magnitude;
@@ -463,28 +479,28 @@ class FaceRecognitionService {
 
       // Multi-algorithm matching for higher accuracy
       const results = [];
-      
+
       for (const [filename, dbDescriptor] of this.faceDatabase) {
         // Euclidean distance
         const euclideanDist = this.calculateDistance(inputDescriptor, dbDescriptor);
-        
+
         // Cosine similarity
         const cosineSim = this.calculateCosineSimilarity(inputDescriptor, dbDescriptor);
-        
+
         // Manhattan distance
         const manhattanDist = this.calculateManhattanDistance(inputDescriptor, dbDescriptor);
-        
+
         // Combined confidence score
         const normalizedEuclidean = Math.max(0, 1 - (euclideanDist / 2));
         const normalizedManhattan = Math.max(0, 1 - (manhattanDist / 256));
-        
+
         // Weighted average of all metrics
         const combinedScore = (
           normalizedEuclidean * 0.4 + 
           cosineSim * 0.4 + 
           normalizedManhattan * 0.2
         );
-        
+
         results.push({
           filename,
           score: combinedScore,
@@ -496,13 +512,13 @@ class FaceRecognitionService {
 
       // Sort by combined score (highest first)
       results.sort((a, b) => b.score - a.score);
-      
+
       const bestMatch = results[0];
-      
+
       // Strict threshold for 90% confidence
       const highConfidenceThreshold = 0.85;
       const minimumConfidenceThreshold = 0.75;
-      
+
       if (bestMatch && bestMatch.score >= highConfidenceThreshold) {
         // High confidence match
         return {

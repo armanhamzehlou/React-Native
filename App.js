@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   StyleSheet, 
@@ -32,6 +31,7 @@ export default function App() {
   const [showTestModal, setShowTestModal] = useState(false);
   const [testImage, setTestImage] = useState(null);
   const [newFaceName, setNewFaceName] = useState('');
+  const [forceUpdate, setForceUpdate] = useState(0);
 
   const loadFaceDbImages = useCallback(async () => {
     try {
@@ -50,23 +50,30 @@ export default function App() {
       console.log('🔥 AGGRESSIVE LOG: Starting app initialization...');
       console.log('🔥 Platform:', Platform.OS);
       console.log('🔥 Current isInitialized state:', isInitialized);
-      
+
       console.log('🔥 Calling FaceRecognitionService.initialize()...');
       await FaceRecognitionService.initialize();
       console.log('🔥 ✅ Face Recognition Service initialized successfully');
-      
+
       console.log('🔥 Loading face database...');
       const count = await FaceRecognitionService.loadFaceDatabase();
       console.log('🔥 ✅ Database loaded with', count, 'faces');
       setFaceDbCount(count);
-      
+
       console.log('🔥 Loading face database images...');
       await loadFaceDbImages();
       console.log('🔥 ✅ Face database images loaded');
-      
+
       console.log('🔥 Setting isInitialized to true...');
       setIsInitialized(true);
+      setForceUpdate(prev => prev + 1); // Force re-render
       console.log('🔥 ✅ App initialization complete');
+
+      // Force a small delay to ensure state updates properly
+      setTimeout(() => {
+        console.log('🔥 📱 UI should now show as initialized');
+        setForceUpdate(prev => prev + 1); // Second force re-render
+      }, 100);
     } catch (error) {
       console.error('🔥 ❌ Failed to initialize app:', error);
       console.error('🔥 ❌ Error message:', error.message);
@@ -107,48 +114,48 @@ export default function App() {
   useEffect(() => {
     console.log('🔥 useEffect triggered - isInitialized:', isInitialized);
     console.log('🔥 Current Platform.OS:', Platform.OS);
-    
+
     // Prevent re-initialization if already initialized
     if (isInitialized) {
       console.log('🔥 Already initialized, skipping setup');
       return;
     }
-    
+
     const setupApp = async () => {
       console.log('🔥 Starting setupApp function...');
-      
+
       if (Platform.OS === 'android' || Platform.OS === 'web') {
         console.log('🔥 Platform supported, continuing setup...');
-        
+
         if (Platform.OS === 'android') {
           console.log('🔥 Requesting Android permissions...');
           await requestPermissions();
           console.log('🔥 ✅ Android permissions completed');
         }
-        
+
         // Add timeout to prevent infinite initialization
         console.log('🔥 Setting up initialization timeout...');
         const initTimeout = setTimeout(() => {
           console.error('🔥 ❌ Initialization timeout - forcing completion');
           setIsInitialized(true);
         }, 15000); // 15 second timeout
-        
+
         try {
           console.log('🔥 Calling initializeApp...');
           await initializeApp();
           console.log('🔥 ✅ initializeApp completed successfully');
           clearTimeout(initTimeout);
-          
+
           console.log('🔥 Setting up deep link handler...');
           setupDeepLinkHandler();
           console.log('🔥 ✅ Deep link handler setup completed');
-          
+
           console.log('🔥 🎉 APP INITIALIZATION COMPLETE! 🎉');
         } catch (error) {
           console.error('🔥 ❌ Setup error:', error);
           clearTimeout(initTimeout);
           setIsInitialized(true); // Force initialization even on error
-          
+
           console.log('🔥 Setting up deep link handler after error...');
           setupDeepLinkHandler();
           console.log('🔥 ⚠️ APP INITIALIZATION COMPLETED WITH ERRORS');
@@ -188,7 +195,7 @@ export default function App() {
         try {
           // Dynamic import to avoid web compatibility issues
           const { PermissionsAndroid } = require('react-native');
-          
+
           const permissions = [
             PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
             PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
@@ -196,7 +203,7 @@ export default function App() {
           ];
 
           const granted = await PermissionsAndroid.requestMultiple(permissions);
-          
+
           const allGranted = Object.values(granted).every(
             permission => permission === PermissionsAndroid.RESULTS.GRANTED
           );
@@ -229,22 +236,22 @@ export default function App() {
     }
   };
 
-  
+
 
   const processDeepLink = async (url) => {
     try {
       console.log('Processing deep link:', url);
-      
+
       if (url.startsWith('faceapp://match')) {
         const urlParams = new URL(url);
         const imagePath = urlParams.searchParams.get('path');
-        
+
         if (imagePath) {
           setIsProcessing(true);
           const result = await FaceRecognitionService.matchFace(imagePath);
           setLastResult(result);
           setIsProcessing(false);
-          
+
           Alert.alert(
             'Face Match Result',
             result.match === 'yes' 
@@ -267,11 +274,11 @@ export default function App() {
       const count = await FaceRecognitionService.loadFaceDatabase();
       console.log('🔥 Database loaded with', count, 'faces');
       setFaceDbCount(count);
-      
+
       console.log('🔥 Reloading face database images...');
       await loadFaceDbImages();
       console.log('🔥 ✅ Database reload complete');
-      
+
       Alert.alert('Database Reloaded', `Loaded ${count} face images`);
     } catch (error) {
       console.error('🔥 ❌ Error reloading database:', error);
@@ -320,7 +327,7 @@ export default function App() {
 
       // Use a more robust approach with default name and confirmation
       console.log('Showing name prompt for image:', imageUri);
-      
+
       Alert.prompt(
         'Add Face to Database',
         'Enter a name for this face:',
@@ -336,38 +343,38 @@ export default function App() {
             text: 'Add',
             onPress: async (name) => {
               console.log('🔥 User entered name:', name);
-              
+
               // Use default name if none provided
               const faceName = (name && name.trim()) ? name.trim() : `Face_${Date.now()}`;
               console.log('🔥 Using face name:', faceName);
-              
+
               try {
                 // Always ensure service is properly initialized
                 console.log('🔥 Ensuring service is initialized...');
                 await FaceRecognitionService.initialize();
                 console.log('🔥 ✅ Service initialization confirmed');
-                
+
                 const filename = `${faceName.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
                 console.log('🔥 Adding face to database:', filename, 'from', imageUri);
-                
+
                 const actualFilename = await FaceRecognitionService.addImageToFaceDb(imageUri, filename);
                 console.log('🔥 ✅ Face added successfully with filename:', actualFilename);
-                
+
                 // Wait a moment for file system to sync
                 console.log('🔥 Waiting for file system sync...');
                 await new Promise(resolve => setTimeout(resolve, 1500));
                 console.log('🔥 ✅ File system sync wait complete');
-                
+
                 // Reload the database and update state
                 console.log('🔥 Reloading database after adding face...');
                 const count = await FaceRecognitionService.loadFaceDatabase();
                 console.log('🔥 ✅ Database loaded with', count, 'faces');
                 setFaceDbCount(count);
-                
+
                 console.log('🔥 Reloading face database images after adding...');
                 await loadFaceDbImages();
                 console.log('🔥 ✅ Face database images reloaded');
-                
+
                 Alert.alert('Success', `Face added to database as ${actualFilename}. Database now has ${count} faces.`);
               } catch (error) {
                 console.error('🔥 ❌ Error adding face to database:', error);
@@ -417,7 +424,7 @@ export default function App() {
 
       setTestImage(imageUri);
       setIsProcessing(true);
-      
+
       const result = await FaceRecognitionService.matchFace(imageUri);
       setLastResult(result);
       setIsProcessing(false);
@@ -465,7 +472,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
-      
+
       <View style={styles.header}>
         <Text style={styles.title}>Face Recognition Service</Text>
         <Text style={styles.subtitle}>
@@ -605,7 +612,7 @@ export default function App() {
                 <Image source={{ uri: testImage }} style={styles.testImage} />
               </View>
             )}
-            
+
             {lastResult && (
               <View style={styles.testResult}>
                 <Text style={styles.testLabel}>Result:</Text>
