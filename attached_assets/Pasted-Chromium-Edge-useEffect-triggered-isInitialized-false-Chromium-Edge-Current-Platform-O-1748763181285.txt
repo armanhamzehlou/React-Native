@@ -1,0 +1,158 @@
+Chromium Edge:
+🔥 useEffect triggered - isInitialized: false
+Chromium Edge:
+🔥 Current Platform.OS: web
+Chromium Edge:
+🔥 Calling setupApp...
+Chromium Edge:
+🔥 Starting setupApp function...
+Chromium Edge:
+🔥 Platform supported, continuing setup...
+Chromium Edge:
+🔥 Setting up initialization timeout...
+Chromium Edge:
+🔥 Calling initializeApp...
+Chromium Edge:
+🔥 AGGRESSIVE LOG: Starting app initialization...
+Chromium Edge:
+🔥 Platform: web
+Chromium Edge:
+🔥 Current isInitialized state: false
+Chromium Edge:
+🔥 Calling FaceRecognitionService.initialize()...
+Chromium Edge:
+Initializing Face Recognition Service for web
+Chromium Edge:
+Web environment detected - running in demo mode
+Chromium Edge:
+TensorFlow.js and face-api.js would be loaded here in production
+Chromium Edge:
+Face Recognition Service initialized
+Chromium Edge:
+🔥 Setting up AppState listener...
+Chromium Edge:
+🔥 ✅ Face Recognition Service initialized successfully
+Chromium Edge:
+🔥 Loading face database...
+Chromium Edge:
+Running in web environment - no face database available
+Chromium Edge:
+🔥 ✅ Database loaded with 0 faces
+Chromium Edge:
+🔥 Loading face database images...
+2
+Chromium Edge:
+Web environment - no real face database access available
+Chromium Edge:
+🔥 Loaded images count: 0
+Chromium Edge:
+🔥 Loaded images filenames: []
+Chromium Edge:
+🔥 ✅ Face database images loaded
+Chromium Edge:
+🔥 Setting isInitialized to true...
+Chromium Edge:
+🔥 ✅ App initialization complete
+Chromium Edge:
+🔥 ✅ initializeApp completed successfully
+Chromium Edge:
+🔥 Setting up deep link handler...
+2
+Chromium Edge:
+🔥 Handling deep link...
+Chromium Edge:
+🔥 ✅ Deep link handler setup complete
+Chromium Edge:
+🔥 ✅ Deep link handler setup completed
+Chromium Edge:
+🔥 🎉 APP INITIALIZATION COMPLETE! 🎉
+Chromium Edge:
+🔥 Initial URL: https://snack-web-player.s3.us-west-1.amazonaws.com/v2/52/index.html?initialUrl=exp%3A%2F%2Fu.expo.dev%2F933fd9c0-1666-11e7-afca-d980795c5824%3Fruntime-version%3Dexposdk%253A52.0.0%26channel-name%3Dproduction%26snack%3D%2540git%252Fgithub.com%252Farmanhamzehlou%252FReact-Native%26snack-channel%3DISvVYZOtBr&origin=https%3A%2F%2Fsnack.expo.dev&verbose=false
+Chromium Edge:
+Processing deep link: https://snack-web-player.s3.us-west-1.amazonaws.com/v2/52/index.html?initialUrl=exp%3A%2F%2Fu.expo.dev%2F933fd9c0-1666-11e7-afca-d980795c5824%3Fruntime-version%3Dexposdk%253A52.0.0%26channel-name%3Dproduction%26snack%3D%2540git%252Fgithub.com%252Farmanhamzehlou%252FReact-Native%26snack-channel%3DISvVYZOtBr&origin=https%3A%2F%2Fsnack.expo.dev&verbose=false
+Chromium Edge:
+🔥 Cleaning up AppState listener...
+Chromium Edge:
+🔥 useEffect triggered - isInitialized: true
+Chromium Edge:
+🔥 Current Platform.OS: web
+Chromium Edge:
+🔥 Already initialized, skipping setup
+Chromium Edge:
+🔥 Setting up AppState listener...
+Chromium Edge:
+🔥 📱 UI should now show as initialized
+Chromium Edge:
+🔥 Starting image picker...
+Chromium Edge:
+🔥 No image selected
+sdk_gphone64_x86_64:
+🔥 useEffect triggered - isInitialized: false
+sdk_gphone64_x86_64:
+🔥 App state changed to: active
+sdk_gphone64_x86_64:
+🔥 Starting image picker...
+sdk_gphone64_x86_64:
+🔥 App state changed to: active
+2
+sdk_gphone64_x86_64:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/e90e967c-9e95-45db-84c8-9eba7d1b7184.jpeg
+sdk_gphone64_x86_64:
+🔥 Selected image URI: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/e90e967c-9e95-45db-84c8-9eba7d1b7184.jpeg
+sdk_gphone64_x86_64:
+Showing name prompt for image: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/e90e967c-9e95-45db-84c8-9eba7d1b7184.jpeg
+sdk_gphone64_x86_64:
+🔥 Reloading face database...
+sdk_gphone64_x86_64:
+Creating FaceDB directory: file:///data/user/0/host.exp.exponent/files/Download/FaceDB/
+sdk_gphone64_x86_64:
+🔥 Database loaded with 0 faces
+sdk_gphone64_x86_64:
+🔥 Reloading face database images...
+sdk_gphone64_x86_64:
+🔥 Loading face database images...
+sdk_gphone64_x86_64:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/Download/FaceDB/
+sdk_gphone64_x86_64:
+Found files in FaceDB: []
+sdk_gphone64_x86_64:
+Image files: []
+sdk_gphone64_x86_64:
+Loaded 0 images from FaceDB
+sdk_gphone64_x86_64:
+🔥 Loaded images count: 0
+sdk_gphone64_x86_64:
+🔥 Loaded images filenames: []
+sdk_gphone64_x86_64:
+🔥 ✅ Database reload complete
+sdk_gphone64_x86_64:
+🔥 App state changed to: active
+2
+sdk_gphone64_x86_64:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/aa71ebd8-8bae-42da-89d4-5dae6283add0.jpeg
+sdk_gphone64_x86_64:
+Face Recognition Service not initialized - calling initialize()
+sdk_gphone64_x86_64:
+Initializing Face Recognition Service for android
+sdk_gphone64_x86_64:
+🔥 📁 Platform: android
+sdk_gphone64_x86_64:
+🔥 📁 Document Directory: file:///data/user/0/host.exp.exponent/files/
+sdk_gphone64_x86_64:
+🔥 📁 Cache Directory: file:///data/user/0/host.exp.exponent/cache/
+sdk_gphone64_x86_64:
+🔥 📁 Creating FaceDB directory at: file:///data/user/0/host.exp.exponent/files/Download/FaceDB/
+sdk_gphone64_x86_64:
+🔥 📁 Using Android internal storage Downloads folder
+sdk_gphone64_x86_64:
+🔥 📁 Full path will be: Android/data/[app]/files/Download/FaceDB/
+sdk_gphone64_x86_64:
+Directory check result: {"exists":true,"isDirectory":true,"uri":"file:///data/user/0/host.exp.exponent/files/Download/FaceDB","size":0,"modificationTime":1748763104.188}
+sdk_gphone64_x86_64:
+FaceDB directory already exists
+sdk_gphone64_x86_64:
+✅ Face Recognition Service initialized successfully for android
+sdk_gphone64_x86_64:
+Matching face from: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/aa71ebd8-8bae-42da-89d4-5dae6283add0.jpeg
+sdk_gphone64_x86_64:
+Extracting face descriptor from: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/aa71ebd8-8bae-42da-89d4-5dae6283add0.jpeg
