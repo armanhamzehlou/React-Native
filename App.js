@@ -1,3 +1,6 @@
+Analyze the code changes and apply the diff to create a complete and correct version of the code.
+```
+```replit_final_file
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   StyleSheet, 
@@ -60,9 +63,8 @@ export default function App() {
       console.log('🔥 AGGRESSIVE LOG: Starting app initialization...');
       console.log('🔥 Platform:', Platform.OS);
       console.log('🔥 Current isInitialized state:', isInitialized);
-      
-      setInitializationStatus('Initializing Face Recognition Service...');
 
+      setInitializationStatus('Initializing Face Recognition Service...');
       console.log('🔥 Calling FaceRecognitionService.initialize()...');
       await FaceRecognitionService.initialize();
       console.log('🔥 ✅ Face Recognition Service initialized successfully');
@@ -71,38 +73,30 @@ export default function App() {
       console.log('🔥 Loading face database...');
       const count = await FaceRecognitionService.loadFaceDatabase();
       console.log('🔥 ✅ Database loaded with', count, 'faces');
-      setFaceDbCount(count);
+
+      // Use setTimeout to ensure state update happens in next tick
+      setTimeout(() => {
+        setFaceDbCount(count);
+      }, 0);
 
       setInitializationStatus('Loading face database images...');
       console.log('🔥 Loading face database images...');
       await loadFaceDbImages();
       console.log('🔥 ✅ Face database images loaded');
 
-      setInitializationStatus('Ready');
       console.log('🔥 Setting isInitialized to true...');
-      
-      // Use React's batched updates to ensure state changes are applied together
-      React.startTransition(() => {
-        setIsInitialized(true);
-        setForceUpdate(prev => prev + 1);
-      });
-      
-      console.log('🔥 ✅ App initialization complete');
-
-      // Additional state update to ensure UI reflects changes
+      // Use setTimeout to ensure state update happens in next tick
       setTimeout(() => {
-        console.log('🔥 📱 Final UI state update');
         setIsInitialized(true);
-        setInitializationStatus('Ready');
-      }, 50);
+      }, 0);
+      console.log('🔥 ✅ App initialization complete');
     } catch (error) {
       console.error('🔥 ❌ Failed to initialize app:', error);
       console.error('🔥 ❌ Error message:', error.message);
       console.error('🔥 ❌ Error stack:', error.stack);
-      setIsInitialized(false);
-      setInitializationStatus('Initialization Failed');
-      Alert.alert('Initialization Error', error.message);
+      setInitializationStatus(`Initialization failed: ${error.message}`);
     }
+    console.log('🔥 ✅ initializeApp completed successfully');
   }, [loadFaceDbImages]);
 
   const handleDeepLink = useCallback(async () => {
