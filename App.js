@@ -41,6 +41,7 @@ export default function App() {
   const [testImage, setTestImage] = useState(null);
   const [newFaceName, setNewFaceName] = useState('');
   const [forceUpdate, setForceUpdate] = useState(0);
+  const [initializationStatus, setInitializationStatus] = useState('Initializing...');
 
   const loadFaceDbImages = useCallback(async () => {
     try {
@@ -59,35 +60,47 @@ export default function App() {
       console.log('🔥 AGGRESSIVE LOG: Starting app initialization...');
       console.log('🔥 Platform:', Platform.OS);
       console.log('🔥 Current isInitialized state:', isInitialized);
+      
+      setInitializationStatus('Initializing Face Recognition Service...');
 
       console.log('🔥 Calling FaceRecognitionService.initialize()...');
       await FaceRecognitionService.initialize();
       console.log('🔥 ✅ Face Recognition Service initialized successfully');
 
+      setInitializationStatus('Loading face database...');
       console.log('🔥 Loading face database...');
       const count = await FaceRecognitionService.loadFaceDatabase();
       console.log('🔥 ✅ Database loaded with', count, 'faces');
       setFaceDbCount(count);
 
+      setInitializationStatus('Loading face database images...');
       console.log('🔥 Loading face database images...');
       await loadFaceDbImages();
       console.log('🔥 ✅ Face database images loaded');
 
+      setInitializationStatus('Ready');
       console.log('🔥 Setting isInitialized to true...');
-      setIsInitialized(true);
-      setForceUpdate(prev => prev + 1); // Force re-render
+      
+      // Use React's batched updates to ensure state changes are applied together
+      React.startTransition(() => {
+        setIsInitialized(true);
+        setForceUpdate(prev => prev + 1);
+      });
+      
       console.log('🔥 ✅ App initialization complete');
 
-      // Force a small delay to ensure state updates properly
+      // Additional state update to ensure UI reflects changes
       setTimeout(() => {
-        console.log('🔥 📱 UI should now show as initialized');
-        setForceUpdate(prev => prev + 1); // Second force re-render
-      }, 100);
+        console.log('🔥 📱 Final UI state update');
+        setIsInitialized(true);
+        setInitializationStatus('Ready');
+      }, 50);
     } catch (error) {
       console.error('🔥 ❌ Failed to initialize app:', error);
       console.error('🔥 ❌ Error message:', error.message);
       console.error('🔥 ❌ Error stack:', error.stack);
       setIsInitialized(false);
+      setInitializationStatus('Initialization Failed');
       Alert.alert('Initialization Error', error.message);
     }
   }, [loadFaceDbImages]);
@@ -199,53 +212,26 @@ export default function App() {
 
   const requestPermissions = async () => {
     try {
-      // Only request Android permissions on Android platform
+      // Only request permissions for mobile platforms
       if (Platform.OS === 'android') {
-        try {
-          // Check if PermissionsAndroid is available (not available on web)
-          let PermissionsAndroid = null;
-          try {
-            PermissionsAndroid = require('react-native').PermissionsAndroid;
-          } catch (permError) {
-            console.warn('PermissionsAndroid not available on this platform');
-            return;
-          }
-
-          if (!PermissionsAndroid) return;
-
-          const permissions = [
-            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-          ];
-
-          const granted = await PermissionsAndroid.requestMultiple(permissions);
-
-          const allGranted = Object.values(granted).every(
-            permission => permission === PermissionsAndroid.RESULTS.GRANTED
-          );
-
-          if (!allGranted) {
-            Alert.alert(
-              'Permissions Required',
-              'This app needs storage and camera permissions to work properly.',
-              [{ text: 'OK' }]
-            );
-          }
-        } catch (permError) {
-          console.warn('Android permissions not available:', permError);
-        }
+        console.log('🔥 Requesting Android permissions...');
+        // Android permissions are handled by Expo automatically for most cases
+        // We'll rely on Expo's permission system instead of manual requests
       }
 
       // Request media library permissions for Expo (non-web platforms)
       if (Platform.OS !== 'web' && ImagePicker) {
         try {
+          console.log('🔥 Requesting media library permissions...');
           const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (status !== 'granted') {
+            console.warn('Media library permission not granted');
             Alert.alert('Media library permission is required to select images');
+          } else {
+            console.log('🔥 ✅ Media library permissions granted');
           }
         } catch (imagePickerError) {
-          console.warn('ImagePicker permissions not available:', imagePickerError);
+          console.warn('ImagePicker permissions error:', imagePickerError);
         }
       }
     } catch (error) {
@@ -498,8 +484,13 @@ export default function App() {
       <View style={styles.header}>
         <Text style={styles.title}>Face Recognition Service</Text>
         <Text style={styles.subtitle}>
-          {isInitialized ? `✅ Ready for ${Platform.OS}` : '⏳ Initializing...'}
+          {isInitialized ? `✅ Ready for ${Platform.OS}` : `⏳ ${initializationStatus}`}
         </Text>
+        {!isInitialized && (
+          <Text style={styles.initStatus}>
+            Platform: {Platform.OS} | State: {isInitialized ? 'Ready' : 'Loading'}
+          </Text>
+        )}
       </View>
 
       <ScrollView style={styles.content}>
@@ -693,6 +684,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
     marginTop: 5,
+  },
+  initStatus: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,0.8)',
+    marginTop: 3,
+    textAlign: 'center',
   },
   content: {
     flex: 1,

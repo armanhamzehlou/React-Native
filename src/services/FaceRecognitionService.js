@@ -10,8 +10,8 @@ class FaceRecognitionService {
     if (Platform.OS === 'web') {
       this.faceDbPath = '/FaceDB/';
     } else if (Platform.OS === 'android') {
-      // Use Android internal storage Downloads folder
-      this.faceDbPath = `${FileSystem.documentDirectory}Download/FaceDB/`;
+      // Use Android app-specific directory for better reliability
+      this.faceDbPath = `${FileSystem.documentDirectory}FaceDB/`;
     } else {
       // iOS fallback
       this.faceDbPath = `${FileSystem.documentDirectory}FaceDB/`;
@@ -43,8 +43,8 @@ class FaceRecognitionService {
         console.log('🔥 📁 Creating FaceDB directory at:', this.faceDbPath);
         
         if (Platform.OS === 'android') {
-          console.log('🔥 📁 Using Android internal storage Downloads folder');
-          console.log('🔥 📁 Full path will be: Android/data/[app]/files/Download/FaceDB/');
+          console.log('🔥 📁 Using Android app-specific directory');
+          console.log('🔥 📁 Full path will be: Android/data/[app]/files/FaceDB/');
         }
 
         // Create FaceDB directory if it doesn't exist
