@@ -1,0 +1,209 @@
+Chromium Edge:
+🔥 Loaded images count: 0
+Chromium Edge:
+🔥 Loaded images filenames: []
+Chromium Edge:
+🔥 ✅ Face database images loaded
+Chromium Edge:
+🔥 Setting isInitialized to true...
+Chromium Edge:
+🔥 ✅ App initialization complete
+Chromium Edge:
+🔥 ✅ initializeApp completed successfully
+Chromium Edge:
+🔥 Setting up deep link handler...
+2
+Chromium Edge:
+🔥 Handling deep link...
+Chromium Edge:
+🔥 ✅ Deep link handler setup complete
+Chromium Edge:
+🔥 ✅ Deep link handler setup completed
+Chromium Edge:
+🔥 🎉 APP INITIALIZATION COMPLETE! 🎉
+Chromium Edge:
+🔥 Initial URL: https://snack-web-player.s3.us-west-1.amazonaws.com/v2/52/index.html?initialUrl=exp%3A%2F%2Fu.expo.dev%2F933fd9c0-1666-11e7-afca-d980795c5824%3Fruntime-version%3Dexposdk%253A52.0.0%26channel-name%3Dproduction%26snack%3D%2540git%252Fgithub.com%252Farmanhamzehlou%252FReact-Native%26snack-channel%3DUFYQnVQ5Ij&origin=https%3A%2F%2Fsnack.expo.dev&verbose=false
+Chromium Edge:
+Processing deep link: https://snack-web-player.s3.us-west-1.amazonaws.com/v2/52/index.html?initialUrl=exp%3A%2F%2Fu.expo.dev%2F933fd9c0-1666-11e7-afca-d980795c5824%3Fruntime-version%3Dexposdk%253A52.0.0%26channel-name%3Dproduction%26snack%3D%2540git%252Fgithub.com%252Farmanhamzehlou%252FReact-Native%26snack-channel%3DUFYQnVQ5Ij&origin=https%3A%2F%2Fsnack.expo.dev&verbose=false
+Chromium Edge:
+🔥 Cleaning up AppState listener...
+Chromium Edge:
+🔥 useEffect triggered - isInitialized: true
+Chromium Edge:
+🔥 Current Platform.OS: web
+Chromium Edge:
+🔥 Already initialized, skipping setup
+Chromium Edge:
+🔥 Setting up AppState listener...
+Chromium Edge:
+🔥 📱 Final UI state update
+iPhone 16 Pro:
+🔥 useEffect triggered - isInitialized: false
+iPhone 16 Pro:
+🔥 Current Platform.OS: ios
+iPhone 16 Pro:
+🔥 Calling setupApp...
+iPhone 16 Pro:
+🔥 Starting setupApp function...
+iPhone 16 Pro:
+🔥 ❌ Platform not supported: ios
+iPhone 16 Pro:
+🔥 Setting up AppState listener...
+sdk_gphone64_x86_64:
+🔥 useEffect triggered - isInitialized: false
+sdk_gphone64_x86_64:
+🔥 Current Platform.OS: android
+sdk_gphone64_x86_64:
+🔥 Calling setupApp...
+sdk_gphone64_x86_64:
+🔥 Starting setupApp function...
+sdk_gphone64_x86_64:
+🔥 Platform supported, continuing setup...
+sdk_gphone64_x86_64:
+🔥 Requesting Android permissions...
+2
+sdk_gphone64_x86_64:
+🔥 Requesting media library permissions...
+sdk_gphone64_x86_64:
+🔥 Setting up AppState listener...
+sdk_gphone64_x86_64:
+🔥 ✅ Media library permissions granted
+sdk_gphone64_x86_64:
+🔥 ✅ Android permissions completed
+sdk_gphone64_x86_64:
+🔥 Setting up initialization timeout...
+sdk_gphone64_x86_64:
+🔥 Calling initializeApp...
+sdk_gphone64_x86_64:
+🔥 AGGRESSIVE LOG: Starting app initialization...
+sdk_gphone64_x86_64:
+🔥 Platform: android
+sdk_gphone64_x86_64:
+🔥 Current isInitialized state: false
+sdk_gphone64_x86_64:
+🔥 Calling FaceRecognitionService.initialize()...
+sdk_gphone64_x86_64:
+Initializing Face Recognition Service for android
+sdk_gphone64_x86_64:
+🔥 📁 Platform: android
+sdk_gphone64_x86_64:
+🔥 📁 Document Directory: file:///data/user/0/host.exp.exponent/files/
+sdk_gphone64_x86_64:
+🔥 📁 Cache Directory: file:///data/user/0/host.exp.exponent/cache/
+sdk_gphone64_x86_64:
+🔥 📁 Creating FaceDB directory at: file:///data/user/0/host.exp.exponent/files/FaceDB/
+sdk_gphone64_x86_64:
+🔥 📁 Using Android app-specific directory
+sdk_gphone64_x86_64:
+🔥 📁 Full path will be: Android/data/[app]/files/FaceDB/
+sdk_gphone64_x86_64:
+Directory check result: {"exists":false,"isDirectory":false}
+sdk_gphone64_x86_64:
+Created FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+sdk_gphone64_x86_64:
+Verified FaceDB directory exists
+sdk_gphone64_x86_64:
+✅ Face Recognition Service initialized successfully for android
+sdk_gphone64_x86_64:
+🔥 ✅ Face Recognition Service initialized successfully
+sdk_gphone64_x86_64:
+🔥 Loading face database...
+sdk_gphone64_x86_64:
+Found 0 image files in FaceDB
+sdk_gphone64_x86_64:
+Face database loaded with 0 faces
+sdk_gphone64_x86_64:
+🔥 ✅ Database loaded with 0 faces
+sdk_gphone64_x86_64:
+🔥 Loading face database images...
+2
+sdk_gphone64_x86_64:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+sdk_gphone64_x86_64:
+Found files in FaceDB: []
+sdk_gphone64_x86_64:
+Image files: []
+sdk_gphone64_x86_64:
+Loaded 0 images from FaceDB
+sdk_gphone64_x86_64:
+🔥 Loaded images count: 0
+sdk_gphone64_x86_64:
+🔥 Loaded images filenames: []
+sdk_gphone64_x86_64:
+🔥 ✅ Face database images loaded
+sdk_gphone64_x86_64:
+🔥 Setting isInitialized to true...
+sdk_gphone64_x86_64:
+🔥 ❌ Failed to initialize app: Error: "Cannot read property 'add' of undefined" in TypeError: Cannot read property 'add' of undefined <<     at requestUpdateLane (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:18902:43) <<     at dispatchSetState (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:16736:33) <<     at anonymous (App.js:86)
+...
+sdk_gphone64_x86_64:
+🔥 ❌ Error message: Cannot read property 'add' of undefined
+sdk_gphone64_x86_64:
+🔥 ❌ Error stack: TypeError: Cannot read property 'add' of undefined
+    at requestUpdateLane (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:18902:43)
+    at dispatchSetState (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:16736:33)
+    at anonymous (module://App.js.js!transpiled:110:25)
+    at anonymous (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:12263:8)
+    at ?anon_0_ (module://App.js.js!transpiled:109:37)
+    at next (native)
+    at asyncGeneratorStep (module://App.js.js!transpiled:13:70)
+    at _next (module://App.js.js!transpiled:14:181)
+    at run (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:54832:31)
+    at anonymous (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:54849:35)
+    at flush (/data/user/0/host.exp.exponent/files/.expo-internal/c2cc6e7636a4179315dd68fdf0595e63:55172:13)
+    at tryCallOne (address at InternalBytecode.js:1:1180)
+    at anonymous (address at InternalBytecode.js:1:1874)
+sdk_gphone64_x86_64:
+🔥 ✅ initializeApp completed successfully
+sdk_gphone64_x86_64:
+🔥 Setting up deep link handler...
+2
+sdk_gphone64_x86_64:
+🔥 Handling deep link...
+sdk_gphone64_x86_64:
+🔥 ✅ Deep link handler setup complete
+sdk_gphone64_x86_64:
+🔥 ✅ Deep link handler setup completed
+sdk_gphone64_x86_64:
+🔥 🎉 APP INITIALIZATION COMPLETE! 🎉
+sdk_gphone64_x86_64:
+🔥 Initial URL: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A52.0.0&channel-name=production&snack=%40hamzehlou%2Fgithub.com-armanhamzehlou-react-native&snack-channel=UFYQnVQ5Ij
+sdk_gphone64_x86_64:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A52.0.0&channel-name=production&snack=%40hamzehlou%2Fgithub.com-armanhamzehlou-react-native&snack-channel=UFYQnVQ5Ij
+sdk_gphone64_x86_64:
+🔥 Starting image picker...
+sdk_gphone64_x86_64:
+🔥 App state changed to: active
+2
+sdk_gphone64_x86_64:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/acc858b6-a6b3-4246-a88e-a3e24866e130.jpeg
+sdk_gphone64_x86_64:
+🔥 Selected image URI: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/acc858b6-a6b3-4246-a88e-a3e24866e130.jpeg
+sdk_gphone64_x86_64:
+Showing name prompt for image: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/acc858b6-a6b3-4246-a88e-a3e24866e130.jpeg
+sdk_gphone64_x86_64:
+🔥 Reloading face database...
+sdk_gphone64_x86_64:
+Found 0 image files in FaceDB
+sdk_gphone64_x86_64:
+Face database loaded with 0 faces
+sdk_gphone64_x86_64:
+🔥 Database loaded with 0 faces
+sdk_gphone64_x86_64:
+🔥 Reloading face database images...
+sdk_gphone64_x86_64:
+🔥 Loading face database images...
+sdk_gphone64_x86_64:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+sdk_gphone64_x86_64:
+Found files in FaceDB: []
+sdk_gphone64_x86_64:
+Image files: []
+sdk_gphone64_x86_64:
+Loaded 0 images from FaceDB
+sdk_gphone64_x86_64:
+🔥 Loaded images count: 0
+sdk_gphone64_x86_64:
+🔥 Loaded images filenames: []
+sdk_gphone64_x86_64:
+🔥 ✅ Database reload complete
