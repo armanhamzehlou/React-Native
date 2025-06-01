@@ -1,0 +1,132 @@
+SM-S928W:
+🔥 useEffect triggered
+SM-S928W:
+🔥 Current Platform.OS: android
+SM-S928W:
+🔥 Calling setupApp...
+SM-S928W:
+🔥 Starting setupApp function...
+SM-S928W:
+🔥 App state changed to: active
+SM-S928W:
+🔥 Handling deep link...
+SM-S928W:
+🔥 Initial URL: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+🔥 Cleaning up AppState listener...
+SM-S928W:
+🔥 useEffect triggered
+SM-S928W:
+🔥 Current Platform.OS: android
+SM-S928W:
+🔥 Calling setupApp...
+SM-S928W:
+🔥 Starting setupApp function...
+SM-S928W:
+🔥 Platform supported, continuing setup...
+SM-S928W:
+🔥 Requesting Android permissions...
+SM-S928W:
+🔥 Setting up AppState listener...
+SM-S928W:
+🔥 App state changed to: active
+SM-S928W:
+🔥 Handling deep link...
+SM-S928W:
+🔥 Initial URL: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+🔥 Reloading face database...
+SM-S928W:
+Found 0 image files in FaceDB
+SM-S928W:
+Face database loaded with 0 faces
+SM-S928W:
+🔥 Database loaded with 0 faces
+SM-S928W:
+🔥 Reloading face database images...
+SM-S928W:
+🔥 Loading face database images...
+SM-S928W:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+SM-S928W:
+Found files in FaceDB: []
+SM-S928W:
+Image files: []
+SM-S928W:
+Loaded 0 images from FaceDB
+SM-S928W:
+🔥 Loaded images count: 0
+SM-S928W:
+🔥 Loaded images filenames: []
+SM-S928W:
+🔥 ✅ Database reload complete
+SM-S928W:
+🔥 Starting image picker...
+SM-S928W:
+🔥 App state changed to: active
+SM-S928W:
+🔥 Handling deep link...
+SM-S928W:
+🔥 App state changed to: active
+SM-S928W:
+🔥 Handling deep link...
+SM-S928W:
+🔥 Initial URL: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+No image selected or selection was canceled
+SM-S928W:
+🔥 No image selected
+SM-S928W:
+🔥 Starting image picker...
+SM-S928W:
+🔥 App state changed to: active
+SM-S928W:
+🔥 Handling deep link...
+SM-S928W:
+🔥 App state changed to: active
+SM-S928W:
+🔥 Handling deep link...
+SM-S928W:
+🔥 Initial URL: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+Processing deep link: exp://u.expo.dev/933fd9c0-1666-11e7-afca-d980795c5824?runtime-version=exposdk%3A53.0.0&channel-name=production&snack-channel=ZLPEfodl4w
+SM-S928W:
+Image selected: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/c2abc2ad-8eda-40d3-b7b3-8651bedf298c.png
+SM-S928W:
+🔥 Selected image URI: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/c2abc2ad-8eda-40d3-b7b3-8651bedf298c.png
+SM-S928W:
+Showing name prompt for image: file:///data/user/0/host.exp.exponent/cache/ExperienceData/%2540exponent%252Fsnack/ImagePicker/c2abc2ad-8eda-40d3-b7b3-8651bedf298c.png
+SM-S928W:
+🔥 Reloading face database...
+SM-S928W:
+Found 0 image files in FaceDB
+SM-S928W:
+Face database loaded with 0 faces
+SM-S928W:
+🔥 Database loaded with 0 faces
+SM-S928W:
+🔥 Reloading face database images...
+SM-S928W:
+🔥 Loading face database images...
+SM-S928W:
+Checking FaceDB directory: file:///data/user/0/host.exp.exponent/files/FaceDB/
+SM-S928W:
+Found files in FaceDB: []
+SM-S928W:
+Image files: []
+SM-S928W:
+Loaded 0 images from FaceDB
+SM-S928W:
+🔥 Loaded images count: 0
+SM-S928W:
+🔥 Loaded images filenames: []
+SM-S928W:
+🔥 ✅ Database reload complete
+SM-S928W:
+🔥 Cleaning up AppState listener...
