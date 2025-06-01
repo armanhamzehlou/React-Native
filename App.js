@@ -138,14 +138,21 @@ export default function App() {
           await initializeApp();
           console.log('🔥 ✅ initializeApp completed successfully');
           clearTimeout(initTimeout);
+          
+          console.log('🔥 Setting up deep link handler...');
+          setupDeepLinkHandler();
+          console.log('🔥 ✅ Deep link handler setup completed');
+          
+          console.log('🔥 🎉 APP INITIALIZATION COMPLETE! 🎉');
         } catch (error) {
           console.error('🔥 ❌ Setup error:', error);
           clearTimeout(initTimeout);
           setIsInitialized(true); // Force initialization even on error
+          
+          console.log('🔥 Setting up deep link handler after error...');
+          setupDeepLinkHandler();
+          console.log('🔥 ⚠️ APP INITIALIZATION COMPLETED WITH ERRORS');
         }
-        
-        console.log('🔥 Setting up deep link handler...');
-        setupDeepLinkHandler();
       } else {
         console.log('🔥 ❌ Platform not supported:', Platform.OS);
         Alert.alert('Platform Not Supported', 'This app works on Android devices and web demo.');
@@ -178,35 +185,43 @@ export default function App() {
     try {
       // Only request Android permissions on Android platform
       if (Platform.OS === 'android') {
-        // Dynamic import to avoid web compatibility issues
-        const { PermissionsAndroid } = require('react-native');
-        
-        const permissions = [
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.CAMERA,
-        ];
+        try {
+          // Dynamic import to avoid web compatibility issues
+          const { PermissionsAndroid } = require('react-native');
+          
+          const permissions = [
+            PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+            PermissionsAndroid.PERMISSIONS.CAMERA,
+          ];
 
-        const granted = await PermissionsAndroid.requestMultiple(permissions);
-        
-        const allGranted = Object.values(granted).every(
-          permission => permission === PermissionsAndroid.RESULTS.GRANTED
-        );
-
-        if (!allGranted) {
-          Alert.alert(
-            'Permissions Required',
-            'This app needs storage and camera permissions to work properly.',
-            [{ text: 'OK' }]
+          const granted = await PermissionsAndroid.requestMultiple(permissions);
+          
+          const allGranted = Object.values(granted).every(
+            permission => permission === PermissionsAndroid.RESULTS.GRANTED
           );
+
+          if (!allGranted) {
+            Alert.alert(
+              'Permissions Required',
+              'This app needs storage and camera permissions to work properly.',
+              [{ text: 'OK' }]
+            );
+          }
+        } catch (permError) {
+          console.warn('Android permissions not available:', permError);
         }
       }
 
       // Request media library permissions for Expo (non-web platforms)
       if (Platform.OS !== 'web') {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-          Alert.alert('Media library permission is required to select images');
+        try {
+          const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+          if (status !== 'granted') {
+            Alert.alert('Media library permission is required to select images');
+          }
+        } catch (imagePickerError) {
+          console.warn('ImagePicker permissions not available:', imagePickerError);
         }
       }
     } catch (error) {
@@ -266,6 +281,11 @@ export default function App() {
 
   const pickImageFromGallery = async () => {
     try {
+      if (Platform.OS === 'web') {
+        Alert.alert('Web Demo', 'Image picker not available in web demo mode. Please use the Android app for full functionality.');
+        return null;
+      }
+
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ['images'],
         allowsEditing: true,
