@@ -16,8 +16,17 @@ import {
   Dimensions
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import * as ImagePicker from 'expo-image-picker';
 import FaceRecognitionService from './src/services/FaceRecognitionService';
+
+// Conditional import for ImagePicker to avoid web issues
+let ImagePicker = null;
+if (Platform.OS !== 'web') {
+  try {
+    ImagePicker = require('expo-image-picker');
+  } catch (error) {
+    console.warn('ImagePicker not available:', error);
+  }
+}
 
 const { width } = Dimensions.get('window');
 
@@ -193,8 +202,16 @@ export default function App() {
       // Only request Android permissions on Android platform
       if (Platform.OS === 'android') {
         try {
-          // Dynamic import to avoid web compatibility issues
-          const { PermissionsAndroid } = require('react-native');
+          // Check if PermissionsAndroid is available (not available on web)
+          let PermissionsAndroid = null;
+          try {
+            PermissionsAndroid = require('react-native').PermissionsAndroid;
+          } catch (permError) {
+            console.warn('PermissionsAndroid not available on this platform');
+            return;
+          }
+
+          if (!PermissionsAndroid) return;
 
           const permissions = [
             PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
@@ -221,7 +238,7 @@ export default function App() {
       }
 
       // Request media library permissions for Expo (non-web platforms)
-      if (Platform.OS !== 'web') {
+      if (Platform.OS !== 'web' && ImagePicker) {
         try {
           const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
           if (status !== 'granted') {
@@ -290,6 +307,11 @@ export default function App() {
     try {
       if (Platform.OS === 'web') {
         Alert.alert('Web Demo', 'Image picker not available in web demo mode. Please use the Android app for full functionality.');
+        return null;
+      }
+
+      if (!ImagePicker) {
+        Alert.alert('Error', 'Image picker not available on this platform.');
         return null;
       }
 

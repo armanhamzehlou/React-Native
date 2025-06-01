@@ -1,13 +1,21 @@
-import { NativeModules, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system';
 
 class FaceRecognitionService {
   constructor() {
     this.isInitialized = false;
     this.faceDatabase = new Map(); // Map of filename -> face descriptor
-    this.faceDbPath = Platform.OS === 'web' 
-      ? '/FaceDB' 
-      : `${FileSystem.documentDirectory}FaceDB/`;
+    
+    // Configure paths based on platform
+    if (Platform.OS === 'web') {
+      this.faceDbPath = '/FaceDB/';
+    } else if (Platform.OS === 'android') {
+      // Use Android internal storage Downloads folder
+      this.faceDbPath = `${FileSystem.documentDirectory}Download/FaceDB/`;
+    } else {
+      // iOS fallback
+      this.faceDbPath = `${FileSystem.documentDirectory}FaceDB/`;
+    }
   }
 
   async initialize() {
@@ -29,7 +37,15 @@ class FaceRecognitionService {
           throw new Error('FileSystem not available');
         }
 
-        console.log('Creating FaceDB directory at:', this.faceDbPath);
+        console.log('🔥 📁 Platform:', Platform.OS);
+        console.log('🔥 📁 Document Directory:', FileSystem.documentDirectory);
+        console.log('🔥 📁 Cache Directory:', FileSystem.cacheDirectory);
+        console.log('🔥 📁 Creating FaceDB directory at:', this.faceDbPath);
+        
+        if (Platform.OS === 'android') {
+          console.log('🔥 📁 Using Android internal storage Downloads folder');
+          console.log('🔥 📁 Full path will be: Android/data/[app]/files/Download/FaceDB/');
+        }
 
         // Create FaceDB directory if it doesn't exist
         const dirInfo = await FileSystem.getInfoAsync(this.faceDbPath);
